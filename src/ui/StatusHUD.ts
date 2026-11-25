@@ -4,6 +4,8 @@ import type { HudStatusState } from '../core/types';
 export interface StatusHUDOptions {
   bus: EventBus;
   onOpenManual: () => void;
+  onToggleAudio?: () => boolean;
+  initialMuted?: boolean;
 }
 
 /**
@@ -16,6 +18,7 @@ export class StatusHUD {
   private readonly statusEl: HTMLElement;
   private readonly healthFillEl: HTMLElement;
   private readonly healthValueEl: HTMLElement;
+  private readonly audioBtnEl: HTMLButtonElement;
   private readonly manualBtnEl: HTMLButtonElement;
   private readonly manualBadgeEl: HTMLElement;
   private readonly unsubscribers: Array<() => void> = [];
@@ -40,6 +43,13 @@ export class StatusHUD {
           </div>
           <span class="health-gauge__value">100%</span>
         </div>
+        <button type="button" class="hud-audio-btn" aria-label="Alternar som" title="Som / Mudo">
+          <svg class="hud-audio-btn__icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+            <path class="audio-wave" d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+            <path class="audio-wave" d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+          </svg>
+        </button>
         <button type="button" class="hud-manual-btn" aria-haspopup="dialog">
           <span>Manual de Bancada</span>
           <span class="hud-manual-btn__badge">0</span>
@@ -52,8 +62,17 @@ export class StatusHUD {
     this.statusEl = this.root.querySelector('.status-hud__status') as HTMLElement;
     this.healthFillEl = this.root.querySelector('.health-gauge__fill') as HTMLElement;
     this.healthValueEl = this.root.querySelector('.health-gauge__value') as HTMLElement;
+    this.audioBtnEl = this.root.querySelector('.hud-audio-btn') as HTMLButtonElement;
     this.manualBtnEl = this.root.querySelector('.hud-manual-btn') as HTMLButtonElement;
     this.manualBadgeEl = this.root.querySelector('.hud-manual-btn__badge') as HTMLElement;
+
+    this.setAudioMuted(Boolean(options.initialMuted));
+    this.audioBtnEl.addEventListener('click', () => {
+      if (options.onToggleAudio) {
+        const muted = options.onToggleAudio();
+        this.setAudioMuted(muted);
+      }
+    });
 
     this.manualBtnEl.addEventListener('click', () => {
       this.setManualHint(false);
@@ -88,6 +107,12 @@ export class StatusHUD {
 
   setManualHint(active: boolean): void {
     this.manualBtnEl.classList.toggle('is-hint-pulsing', active);
+  }
+
+  setAudioMuted(muted: boolean): void {
+    this.audioBtnEl.dataset.muted = muted ? 'true' : 'false';
+    this.audioBtnEl.setAttribute('aria-pressed', muted ? 'true' : 'false');
+    this.audioBtnEl.title = muted ? 'Ativar som' : 'Silenciar som';
   }
 
   destroy(): void {

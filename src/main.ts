@@ -5,6 +5,7 @@ import './styles/layout.css';
 import { AssessmentEngine } from './core/AssessmentEngine';
 import { EventBus } from './core/EventBus';
 import { InteractionManager } from './core/InteractionManager';
+import { SoundManager } from './core/SoundManager';
 import type { StorageAdapter } from './core/types';
 import type { ILevel } from './levels/LevelInterface';
 import { LacView } from './levels/level1-lac/LacView';
@@ -47,8 +48,10 @@ function bootstrap(): void {
   }
 
   const bus = new EventBus();
-  const assessment = new AssessmentEngine(createLocalStorageAdapter());
+  const storage = createLocalStorageAdapter();
+  const assessment = new AssessmentEngine(storage);
   const interaction = new InteractionManager(bus);
+  const sound = new SoundManager({ bus, storage });
 
   let activeLevelId = assessment.getState().currentLevelId ?? 'level1-lac';
   let activeLevel: ILevel | null = null;
@@ -122,6 +125,8 @@ function bootstrap(): void {
   const hud = new StatusHUD(hudLayer, {
     bus,
     onOpenManual: () => manual.open(),
+    onToggleAudio: () => sound.toggleMute(),
+    initialMuted: sound.isMuted(),
   });
 
   const pool = new MolecularPool(hudLayer, {
@@ -138,6 +143,7 @@ function bootstrap(): void {
     activeLevel = level;
     activeLevelId = level.metadata.id;
     viewportEl.dataset.environment = level.metadata.environment;
+    sound.setLevel(level.metadata.id);
     level.mount({
       stageSvg,
       bus,
@@ -164,6 +170,7 @@ function bootstrap(): void {
   syncLandingProgressState();
 
   startMissionBtn.addEventListener('click', () => {
+    void sound.unlock();
     landingScreen.dataset.hidden = 'true';
     mountLevel(new LacView());
   });

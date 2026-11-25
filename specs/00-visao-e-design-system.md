@@ -83,3 +83,9 @@ Recrutamento (Drag & Drop): O aluno arrasta moléculas do Pool Molecular diretam
 Suporte Híbrido (Desktop + Mobile): Toda ação de arrastar deve funcionar via Pointer Events (pointerdown, pointermove, pointerup) E também permitir o modo alternativo clique-para-selecionar + clique-no-alvo para acessibilidade em telas pequenas.
 
 Manual "Just-in-Time": Botão discreto no canto superior direito que abre uma gaveta lateral com as fichas das moléculas já escaneadas. Se o aluno cometer 2 erros consecutivos no mesmo mecanismo, o botão pulsa suavemente destacando a ficha relevante.
+
+## 7. Sistema de Áudio (`SoundManager.ts`)
+- **Trilha Sonora por Fase (MP3):** Cada nível pode possuir sua própria trilha ambiente em `public/audio/ambient-<levelId>.mp3`, reproduzida em loop com *fade-in* suave e atenuação (*ducking*) durante popups/modais.
+- **Fallback Procedural Fluido:** Na ausência do MP3 da fase, sintetiza uma ambientação líquida/citoplasmática calma (ruído filtrado com LFO lento + sub-harmônico suave em baixo volume).
+- **Efeitos de Interação Orgânicos (Web Audio API):** Síntese subtrativa com filtros e envelopes suaves (sem osciladores crus) para *scan*, encaixe/travar (`lock`), alosteria/destravar (`unlock`), abertura/fechamento de canais, *crafting*, colisão (`bump`) e conclusão.
+- **Controle:** Botão discreto de som/mudo no `StatusHUD` (preferência persistida localmente) e desbloqueio automático no primeiro gesto do usuário.

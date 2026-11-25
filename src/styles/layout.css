@@ -237,6 +237,34 @@ body {
   transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
 }
 
+.hud-audio-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--hud-border);
+  background: rgba(30, 41, 59, 0.75);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast), opacity var(--transition-fast);
+}
+
+.hud-audio-btn:hover {
+  background: rgba(51, 65, 85, 0.9);
+  border-color: rgba(56, 189, 248, 0.5);
+}
+
+.hud-audio-btn[data-muted="true"] {
+  color: var(--text-muted);
+  opacity: 0.72;
+}
+
+.hud-audio-btn[data-muted="true"] .audio-wave {
+  display: none;
+}
+
 .hud-manual-btn:hover {
   background: rgba(51, 65, 85, 0.9);
   border-color: rgba(56, 189, 248, 0.5);
@@ -1382,6 +1410,11 @@ svg [data-selected="true"] {
     padding: 0 10px;
     font-size: 0.74rem;
     gap: 6px;
+  }
+
+  .hud-audio-btn {
+    width: 30px;
+    height: 30px;
   }
 
   .hud-manual-btn__badge {
