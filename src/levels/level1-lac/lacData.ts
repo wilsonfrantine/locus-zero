@@ -12,9 +12,9 @@ export interface LevelBriefing {
 
 export const LAC_BRIEFING: LevelBriefing = {
   eyebrow: 'Nível 1 · Operon lac',
-  title: 'Crise Metabólica em Escherichia coli',
+  title: 'Crise Metabólica em <em>Escherichia coli</em>',
   context:
-    'Esta bactéria Escherichia coli vive no intestino humano. Após a ingestão de leite, o ambiente externo ficou carregado de lactose, enquanto a glicose — seu substrato preferencial — tornou-se escassa.',
+    'Esta bactéria <em>Escherichia coli</em> vive no intestino humano. Após a ingestão de leite, o ambiente externo ficou carregado de lactose, enquanto a glicose — seu substrato preferencial — tornou-se escassa.',
   mission:
     'Sua missão é explorar o interior da célula, descobrir como os componentes interagem e ativar o operon lac para produzir enzimas capazes de metabolizar a lactose.',
   ctaLabel: 'Entrar na Célula',
@@ -179,7 +179,7 @@ export const LAC_STAGE_CONTEXT_INFO: Record<string, StageContextInfo> = {
 export const LAC_EXIT_MUTATION: ExitMutationChallenge = {
   title: 'Anomalia Detectada na Cepa Mutante #42',
   scenario:
-    'Uma colônia de E. coli está produzindo β-galactosidase continuamente (expressão constitutiva), mesmo na ausência total de lactose no meio.',
+    'Uma colônia de <em>E. coli</em> está produzindo β-galactosidase continuamente (expressão constitutiva), mesmo na ausência total de lactose no meio.',
   question: 'Qual mutação explica esse comportamento?',
   options: [
     {

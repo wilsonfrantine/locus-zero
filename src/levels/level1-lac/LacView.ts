@@ -713,7 +713,7 @@ export class LacView implements ILevel {
         <polygon points="-8,-11 4,0 -8,11 -20,0" fill="var(--small-molecule)" stroke="#fef3c7" stroke-width="1.6" />
         <polygon points="10,-8 20,0 10,8 0,0" fill="var(--small-molecule)" fill-opacity="0.88" stroke="#fef3c7" stroke-width="1.4" />
         <text y="22" text-anchor="middle" fill="#fde68a" font-family="var(--font-mono)" font-size="9.5" font-weight="700">Lactose</text>
-        <circle class="drop-zone-hitarea" r="42" />
+        <circle class="drop-zone-hitarea" r="56" />
       </g>
     `;
     return group;
@@ -729,7 +729,7 @@ export class LacView implements ILevel {
         <circle r="22" fill="var(--dna-backbone)" fill-opacity="0.12" stroke="var(--dna-backbone)" stroke-opacity="0.32" stroke-width="1.2" />
         <polygon points="0,-13 11,-6 11,6 0,13 -11,6 -11,-6" fill="var(--dna-backbone)" stroke="#e0f2fe" stroke-width="1.6" />
         <text y="22" text-anchor="middle" fill="#bae6fd" font-family="var(--font-mono)" font-size="9.5" font-weight="700">Glicose</text>
-        <circle class="drop-zone-hitarea" r="42" />
+        <circle class="drop-zone-hitarea" r="56" />
       </g>
     `;
     return group;
@@ -909,6 +909,9 @@ export class LacView implements ILevel {
     };
 
     group.addEventListener('click', (event) => {
+      if (this.context?.interaction.getSelectedMoleculeId()) {
+        return;
+      }
       event.stopPropagation();
       trigger();
     });
@@ -1175,7 +1178,7 @@ export class LacView implements ILevel {
       </div>
 
       <div class="orientation-hint" role="status">
-        <span>Dica: gire o celular para melhor visualização</span>
+        <span>Para melhor visualização, gire o celular na horizontal. Você também pode usar o zoom em pinça.</span>
         <button type="button" class="orientation-hint__close" aria-label="Fechar dica">&times;</button>
       </div>
 
@@ -1505,7 +1508,7 @@ export class LacView implements ILevel {
         element: this.lactoseGateEl,
         x: 340,
         y: 102,
-        hitRadius: 68,
+        hitRadius: 90,
         accepts: (id) => id === 'ext-lactose',
       }),
       interaction.registerDropZone({
@@ -1513,7 +1516,7 @@ export class LacView implements ILevel {
         element: this.glucoseGateEl,
         x: 860,
         y: 102,
-        hitRadius: 68,
+        hitRadius: 90,
         accepts: (id) => id === 'ext-glucose',
       }),
       interaction.registerDropZone({
@@ -1521,7 +1524,7 @@ export class LacView implements ILevel {
         element: this.zoneCapEl,
         x: 245,
         y: 445,
-        hitRadius: 64,
+        hitRadius: 76,
         accepts: (id) => id === 'cap-camp' || id === 'cap' || id === 'camp',
       }),
       interaction.registerDropZone({
@@ -1529,7 +1532,7 @@ export class LacView implements ILevel {
         element: this.zonePromoterEl,
         x: 415,
         y: 445,
-        hitRadius: 64,
+        hitRadius: 76,
         accepts: (id) => id === 'rnap',
       }),
       interaction.registerDropZone({
@@ -1537,7 +1540,7 @@ export class LacView implements ILevel {
         element: this.zoneOperatorEl,
         x: 570,
         y: 445,
-        hitRadius: 64,
+        hitRadius: 76,
         accepts: (id) => id === 'allolactose' || id === 'rnap',
       }),
       interaction.registerDropZone({
@@ -1545,7 +1548,7 @@ export class LacView implements ILevel {
         element: this.laciEl,
         x: state.repressorBound ? 570 : 610,
         y: state.repressorBound ? 412 : 236,
-        hitRadius: 62,
+        hitRadius: 74,
         accepts: (id) => id === 'allolactose',
       }),
     );

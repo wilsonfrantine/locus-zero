@@ -179,6 +179,9 @@ export class InteractionManager {
 
       const latest = this.draggables.get(el)?.config ?? config;
       pe.stopPropagation();
+      if (pe.pointerType !== 'mouse' && pe.cancelable) {
+        pe.preventDefault();
+      }
 
       if (!latest.discovered) {
         this.bus.emit('interaction:scan', { moleculeId: latest.moleculeId });
@@ -193,7 +196,7 @@ export class InteractionManager {
         }
       }
 
-      const pointerSvg = this.clientToSvgPoint(pe.clientX, pe.clientY);
+      const pointerSvg = this.clientToSvgPoint(pe.clientX, pe.clientY, false);
       const grabOffset = latest.origin
         ? { x: pointerSvg.x - latest.origin.x, y: pointerSvg.y - latest.origin.y }
         : { x: 0, y: 0 };
@@ -215,6 +218,10 @@ export class InteractionManager {
       const session = this.activeDrag;
       if (!session || session.pointerId !== pe.pointerId || session.config.element !== el) return;
 
+      if (pe.pointerType !== 'mouse' && pe.cancelable) {
+        pe.preventDefault();
+      }
+
       if (!session.dragging) {
         const dx = pe.clientX - session.startClientX;
         const dy = pe.clientY - session.startClientY;
@@ -232,7 +239,7 @@ export class InteractionManager {
       };
 
       this.updateGhostPosition(session, targetPt);
-      this.updateDropHover(session, svgPt, clientPt);
+      this.updateDropHover(session, svgPt, clientPt, targetPt);
     };
 
     const onPointerUp = (event: Event): void => {
@@ -251,11 +258,16 @@ export class InteractionManager {
       if (session.dragging) {
         const svgPt = this.clientToSvgPoint(pe.clientX, pe.clientY);
         const clientPt = { x: pe.clientX, y: pe.clientY };
+        const targetPt = {
+          x: Math.max(0, Math.min(STAGE_WIDTH, svgPt.x - session.grabOffset.x)),
+          y: Math.max(0, Math.min(STAGE_HEIGHT, svgPt.y - session.grabOffset.y)),
+        };
         const dropZone = this.findMatchingDropZone(
           svgPt,
           session.config.moleculeId,
           clientPt,
           session.config.element,
+          targetPt,
         );
         this.endDragSession(false);
 
@@ -443,12 +455,14 @@ export class InteractionManager {
     session: ActiveDragSession,
     svgPoint: SvgPoint,
     clientPoint: SvgPoint,
+    ghostPoint?: SvgPoint,
   ): void {
     const match = this.findMatchingDropZone(
       svgPoint,
       session.config.moleculeId,
       clientPoint,
       session.config.element,
+      ghostPoint,
     );
     const nextZoneId = match?.id ?? null;
 
@@ -469,6 +483,7 @@ export class InteractionManager {
     moleculeId: MoleculeId,
     clientPoint?: SvgPoint,
     draggedElement?: HTMLElement | SVGElement,
+    ghostPoint?: SvgPoint,
   ): DropZoneConfig | null {
     // 1. Testa zonas HTML (ex.: chips de crafting no MolecularPool) em coordenadas de tela
     if (clientPoint) {
@@ -512,7 +527,11 @@ export class InteractionManager {
       if (config.element === draggedElement) continue;
       if (config.accepts && !config.accepts(moleculeId)) continue;
 
-      const distance = Math.hypot(svgPoint.x - config.x, svgPoint.y - config.y);
+      const fingerDist = Math.hypot(svgPoint.x - config.x, svgPoint.y - config.y);
+      const ghostDist = ghostPoint
+        ? Math.hypot(ghostPoint.x - config.x, ghostPoint.y - config.y)
+        : fingerDist;
+      const distance = Math.min(fingerDist, ghostDist);
       if (distance <= config.hitRadius && distance < bestSvgDistance) {
         bestSvgDistance = distance;
         bestSvgZone = config;

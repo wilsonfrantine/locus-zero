@@ -56,7 +56,9 @@ Fonte UI: Inter ou system-ui, sans-serif (limpa e neutra).
 
 Fonte Dados/Genes: JetBrains Mono ou monospace para nomes de genes (lacZ, lacI), sequências e métricas celulares.
 
-Regra de Texto na Tela: Rótulos dentro das moléculas devem ser curtos (ex.: LacI, RNAP, CAP). Explicações detalhadas ficam restritas ao tooltip de escaneamento e ao Manual de Bancada.
+Regra de Texto na Tela: Rótulos dentro das moléculas devem ser curtos (ex.: LacI, RNApol, CAP). Explicações detalhadas ficam restritas ao Popup de Foco e ao Manual de Bancada.
+
+Nomes Científicos: Todas as citações de nomes científicos (ex.: *Escherichia coli*, *E. coli*) devem ser grafadas em itálico (`<em>`) em briefings, popups, manuais, toasts e desafios.
 
 5. Movimento e Micro-interações (CSS)
 Movimento Browniano: Moléculas livres no citoplasma/nucleoplasma devem ter animação contínua e leve (translate de ±6px e rotate de ±4deg em ciclos de 4s a 7s, ease-in-out infinite alternate).
