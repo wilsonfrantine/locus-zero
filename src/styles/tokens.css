@@ -1,0 +1,53 @@
+:root {
+  /* Ambiente */
+  --bg-cytoplasm-start: #0f172a;   /* Azul profundo suave */
+  --bg-cytoplasm-end: #1e293b;
+  --bg-nucleus-start: #1a1625;     /* Roxo escuro suave para níveis eucarióticos */
+  --bg-nucleus-end: #2d243b;
+
+  /* Estruturas Genéticas */
+  --dna-backbone: #38bdf8;         /* Azul-petróleo / Ciano */
+  --dna-promoter: #0284c7;
+  --dna-operator: #f59e0b;         /* Âmbar */
+  --mrna-strand: #a78bfa;          /* Lilás */
+
+  /* Moléculas Funcionais */
+  --activator-color: #10b981;      /* Esmeralda (CAP, HATs, Enhancers) */
+  --repressor-color: #f43f5e;      /* Coral/Vermelho (LacI, HDACs, Silencers) */
+  --enzyme-core: #6366f1;          /* Índigo (RNA Polimerase, Spliceossomo) */
+  --small-molecule: #fbbf24;       /* Dourado (Alolactose, cAMP, Acetil) */
+  --epigenetic-mark: #c084fc;      /* Violeta (Metilação/Acetilação) */
+
+  /* Feedback e HUD */
+  --hud-glass: rgba(15, 23, 42, 0.72);
+  --hud-border: rgba(255, 255, 255, 0.12);
+  --text-primary: #f8fafc;
+  --text-muted: #94a3b8;
+  --status-ok: #22c55e;
+  --status-danger: #ef4444;
+
+  /* Tipografia */
+  --font-ui: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Camadas de Profundidade */
+  --z-bg: 1;
+  --z-stage: 10;
+  --z-hud: 20;
+  --z-drawer: 30;
+  --z-modal: 40;
+
+  /* Raios, Sombras e Transições */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+
+  --shadow-molecule: drop-shadow(0 6px 14px rgba(2, 6, 23, 0.45));
+  --shadow-glass: 0 12px 32px rgba(2, 6, 23, 0.45);
+  --shadow-glow-select: 0 0 0 2px rgba(56, 189, 248, 0.9), 0 0 18px rgba(56, 189, 248, 0.45);
+
+  --transition-fast: 150ms cubic-bezier(0.22, 1, 0.36, 1);
+  --transition-base: 260ms cubic-bezier(0.22, 1, 0.36, 1);
+  --transition-slow: 480ms cubic-bezier(0.22, 1, 0.36, 1);
+}

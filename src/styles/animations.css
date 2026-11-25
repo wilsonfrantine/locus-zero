@@ -1,0 +1,488 @@
+/* Movimento Browniano (moléculas livres no citoplasma/nucleoplasma) */
+@keyframes brownian-float {
+  0% {
+    transform: translate(-6px, -4px) rotate(-4deg);
+  }
+  50% {
+    transform: translate(5px, 6px) rotate(3deg);
+  }
+  100% {
+    transform: translate(6px, -5px) rotate(4deg);
+  }
+}
+
+.brownian,
+[data-brownian="true"] {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: brownian-float var(--brownian-duration, 5.5s) ease-in-out infinite alternate;
+  animation-delay: var(--brownian-delay, 0s);
+  will-change: transform;
+}
+
+/* Pausa determinística da animação browniana durante arraste */
+[data-dragging="true"] .brownian,
+[data-dragging="true"] [data-brownian="true"],
+.is-dragging,
+[data-dragging="true"] {
+  animation-play-state: paused !important;
+}
+
+/* Destaque sutil de descoberta (sem anéis tracejados chamativos) */
+@keyframes scan-glow-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 0.72;
+    transform: scale(1.04);
+  }
+}
+
+.scan-glow {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: scan-glow-pulse 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.stage-molecule .mol-visual {
+  transition: filter 200ms ease, transform 200ms ease;
+}
+
+.stage-molecule:hover .mol-visual,
+.stage-molecule:active .mol-visual {
+  filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.55));
+}
+
+/* Encaixe magnético válido */
+@keyframes magnetic-snap {
+  0% {
+    transform: scale(1.08);
+    filter: drop-shadow(0 0 18px rgba(34, 197, 94, 0.85));
+  }
+  60% {
+    transform: scale(0.97);
+    filter: drop-shadow(0 0 12px rgba(34, 197, 94, 0.55));
+  }
+  100% {
+    transform: scale(1);
+    filter: var(--shadow-molecule);
+  }
+}
+
+.is-snapping,
+[data-feedback="snap"] {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: magnetic-snap 420ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Impedimento estérico / Bloqueio (bump-and-detach) */
+@keyframes bump-and-detach {
+  0% {
+    transform: translateX(0);
+  }
+  28% {
+    transform: translateX(36px);
+  }
+  44% {
+    transform: translateX(26px);
+  }
+  60% {
+    transform: translateX(36px);
+  }
+  78% {
+    transform: translateX(18px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.is-bumping,
+[data-feedback="bump"] {
+  animation: bump-and-detach 480ms cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+/* Fluxo de transcrição ativa (mRNA via stroke-dashoffset) */
+@keyframes mrna-flow {
+  from {
+    stroke-dashoffset: 64;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.mrna-flow-strand {
+  stroke-dasharray: 12 4;
+  animation: mrna-flow 1.4s linear infinite;
+}
+
+/* Pulso do botão do Manual de Bancada após 2 erros consecutivos */
+@keyframes manual-hint-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.55);
+    border-color: rgba(251, 191, 36, 0.75);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(251, 191, 36, 0);
+    border-color: rgba(251, 191, 36, 1);
+  }
+}
+
+.is-hint-pulsing {
+  animation: manual-hint-pulse 1.8s ease-in-out infinite;
+}
+
+/* Deriva lenta para formas orgânicas desfocadas no fundo */
+@keyframes ambient-drift {
+  0% {
+    transform: translate3d(-12px, -8px, 0) scale(1);
+  }
+  100% {
+    transform: translate3d(14px, 10px, 0) scale(1.04);
+  }
+}
+
+.ambient-organelle {
+  animation: ambient-drift 22s ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brownian,
+  [data-brownian="true"],
+  .scan-glow,
+  .mrna-flow-strand,
+  .is-hint-pulsing,
+  .ambient-organelle,
+  .rnap-glide-basal,
+  .rnap-glide-high,
+  .channel-particle,
+  .diffuse-rtl,
+  .diffuse-ltr {
+    animation: none !important;
+  }
+}
+
+/* Difusão browniana lenta: Lactose (direita -> esquerda) e Glicose (esquerda -> direita) */
+@keyframes diffuse-rtl-flow {
+  0% {
+    transform: translate(110px, -6px) rotate(4deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.78;
+  }
+  50% {
+    transform: translate(-40px, 9px) rotate(-3deg);
+    opacity: 0.85;
+  }
+  85% {
+    opacity: 0.72;
+  }
+  100% {
+    transform: translate(-190px, -5px) rotate(3deg);
+    opacity: 0;
+  }
+}
+
+@keyframes diffuse-ltr-flow {
+  0% {
+    transform: translate(-110px, 6px) rotate(-4deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.78;
+  }
+  50% {
+    transform: translate(40px, -9px) rotate(3deg);
+    opacity: 0.85;
+  }
+  85% {
+    opacity: 0.72;
+  }
+  100% {
+    transform: translate(190px, 5px) rotate(-3deg);
+    opacity: 0;
+  }
+}
+
+.diffuse-rtl {
+  animation: diffuse-rtl-flow var(--diffuse-duration, 13s) ease-in-out infinite;
+  animation-delay: var(--diffuse-delay, 0s);
+  will-change: transform, opacity;
+}
+
+.diffuse-ltr {
+  animation: diffuse-ltr-flow var(--diffuse-duration, 13s) ease-in-out infinite;
+  animation-delay: var(--diffuse-delay, 0s);
+  will-change: transform, opacity;
+}
+
+/* Transições e animações específicas do Nível 1 (Operon lac) */
+.membrane-channel .channel-gate,
+.membrane-channel .channel-body,
+.membrane-channel .channel-pore,
+#mol-laci,
+#mol-cap-camp,
+#mol-rnap {
+  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1), opacity 240ms ease, fill-opacity 240ms ease;
+}
+
+.membrane-channel .channel-name-label {
+  opacity: 0;
+  transition: opacity 240ms ease;
+  pointer-events: none;
+}
+
+.membrane-channel[data-interacted="true"] .channel-name-label,
+.membrane-channel:hover .channel-name-label,
+.membrane-channel:focus-visible .channel-name-label {
+  opacity: 0.92;
+}
+
+.membrane-channel .channel-stream {
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+
+.membrane-channel[data-open="true"] .channel-body--left {
+  transform: translateX(-5px);
+}
+
+.membrane-channel[data-open="true"] .channel-body--right {
+  transform: translateX(5px);
+}
+
+.membrane-channel[data-open="true"] .channel-pore {
+  fill-opacity: 0.18;
+}
+
+.membrane-channel[data-open="true"] .channel-gate {
+  opacity: 0.12;
+  transform: scaleX(0.15);
+}
+
+.membrane-channel[data-open="true"] .channel-stream {
+  opacity: 1;
+}
+
+.membrane-channel .channel-shutoff {
+  opacity: 0;
+  pointer-events: none;
+  cursor: pointer;
+  transition: opacity 200ms ease, transform 180ms ease;
+}
+
+.membrane-channel[data-open="true"] .channel-shutoff {
+  opacity: 0.95;
+  pointer-events: all;
+}
+
+.membrane-channel[data-open="true"] .channel-shutoff:hover {
+  transform: translate(56px, -24px) scale(1.12);
+}
+
+@keyframes channel-particle-flow {
+  0% {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateY(84px);
+    opacity: 0;
+  }
+}
+
+.membrane-channel[data-open="true"] .channel-particle {
+  animation: channel-particle-flow 1.4s linear infinite;
+}
+
+.membrane-channel[data-open="true"] .channel-particle--delayed {
+  animation-delay: 0.55s;
+}
+
+.membrane-channel[data-open="true"] .channel-particle--late {
+  animation-delay: 1.05s;
+}
+
+/* Estados visuais das enzimas automáticas */
+.auto-enzyme[data-active="false"] {
+  opacity: 0.45;
+  transition: opacity 280ms ease;
+}
+
+.auto-enzyme[data-active="true"] {
+  opacity: 1;
+  filter: drop-shadow(0 0 8px rgba(94, 234, 212, 0.25));
+  transition: opacity 280ms ease, filter 280ms ease;
+}
+
+/* Montagem e tradução sequencial dos ribossomos no mRNA */
+@keyframes ribosome-assemble-slide {
+  0% {
+    opacity: 0;
+    transform: translate(-36px, -8px) scale(0.7);
+  }
+  18% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  82% {
+    opacity: 1;
+    transform: translate(115px, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(145px, 6px) scale(0.85);
+  }
+}
+
+@keyframes cleavage-flow {
+  0% {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  30% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+}
+
+.ribosome-unit-1 {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ribosome-assemble-slide 4.6s ease-in-out infinite;
+}
+
+.ribosome-unit-2 {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ribosome-assemble-slide 4.6s ease-in-out infinite;
+  animation-delay: 2.1s;
+}
+
+.cleavage-stream {
+  animation: cleavage-flow 2.8s linear infinite;
+}
+
+@keyframes nascent-betagal-bud {
+  0%,
+  20% {
+    opacity: 0;
+    transform: translate(0, 12px) scale(0.4);
+  }
+  55% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(18px, -16px) scale(1.05);
+  }
+}
+
+.nascent-betagal {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: nascent-betagal-bud 2.3s ease-out infinite;
+}
+
+/* Dobra do DNA no Sítio CAP + Ponte de estabilização CAP-cAMP ↔ RNApol */
+.dna-cap-bend-group {
+  transform-origin: 378px 465px;
+  transition: transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.lac-dna-strand[data-cap-bent="true"] .dna-cap-bend-group {
+  transform: rotate(5deg) translateY(-2px);
+}
+
+.cap-rnap-bridge {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 380ms ease;
+}
+
+.cap-rnap-bridge[data-active="true"] {
+  opacity: 0.92;
+  filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.55));
+}
+
+/* Diferenciação visual entre transcrição basal e máxima */
+#ribosome-group[data-rate="BASAL"] .ribosome-unit-2 {
+  display: none;
+}
+
+#ribosome-group[data-rate="BASAL"] .ribosome-unit-1 {
+  animation-duration: 7.5s;
+}
+
+#ribosome-group[data-rate="BASAL"] .cleavage-stream,
+#ribosome-group[data-rate="BASAL"] .nascent-betagal {
+  animation-duration: 4.8s;
+}
+
+.gene-cassette {
+  cursor: pointer;
+  transition: filter 180ms ease;
+}
+
+.gene-cassette:hover rect,
+.gene-cassette:focus-visible rect {
+  fill: rgba(56, 189, 248, 0.24);
+  stroke: #7dd3fc;
+}
+
+@keyframes rnap-slide-basal {
+  0% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+  55% {
+    transform: translate(160px, 0);
+    opacity: 0.85;
+  }
+  85% {
+    transform: translate(210px, -28px);
+    opacity: 0.35;
+  }
+  100% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes rnap-slide-high {
+  0% {
+    transform: translate(0, 0);
+  }
+  85% {
+    transform: translate(670px, 0);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+.rnap-glide-basal {
+  animation: rnap-slide-basal 4.4s ease-in-out infinite;
+}
+
+.rnap-glide-high {
+  animation: rnap-slide-high 3.8s linear infinite;
+}
