@@ -1263,6 +1263,11 @@ export class LacView implements ILevel {
           this.showMoleculeFocusPopup(spec);
         }
       }),
+      this.context.bus.on('interaction:selection-changed', ({ moleculeId }) => {
+        if (moleculeId === 'ext-lactose' || moleculeId === 'ext-glucose') {
+          this.openContextPopup(moleculeId);
+        }
+      }),
       this.context.bus.on('interaction:apply', ({ moleculeId, targetZoneId }) => {
         this.handleApply(moleculeId, targetZoneId);
       }),
@@ -1842,6 +1847,10 @@ export class LacView implements ILevel {
         return `<svg viewBox="-48 -44 96 80"><path d="M -36 -22 C -28 -36, 28 -36, 36 -22 L 30 12 L 25 12 A 25 25 0 0 1 -25 12 L -30 12 Z" fill="var(--activator-color)" stroke="#a7f3d0" stroke-width="3" /><circle cx="-18" cy="-22" r="7" fill="var(--small-molecule)" /><circle cx="18" cy="-22" r="7" fill="var(--small-molecule)" /></svg>`;
       case 'allolactose':
         return `<svg viewBox="-34 -34 68 68"><polygon points="0,-24 26,0 0,24 -26,0" fill="var(--small-molecule)" stroke="#fef3c7" stroke-width="2.5" /></svg>`;
+      case 'ext-lactose':
+        return `<svg viewBox="-32 -24 64 48"><polygon points="-10,-13 4,0 -10,13 -24,0" fill="var(--small-molecule)" stroke="#fef3c7" stroke-width="2" /><polygon points="11,-10 23,0 11,10 -1,0" fill="var(--small-molecule)" fill-opacity="0.88" stroke="#fef3c7" stroke-width="1.8" /></svg>`;
+      case 'ext-glucose':
+        return `<svg viewBox="-26 -26 52 52"><polygon points="0,-16 14,-8 14,8 0,16 -14,8 -14,-8" fill="var(--dna-backbone)" stroke="#e0f2fe" stroke-width="2.2" /></svg>`;
       case 'adenylate-cyclase':
         return `<svg viewBox="-36 -32 72 64"><path d="M -22 -12 C -22 -24, 22 -24, 22 -12 L 26 14 C 26 24, -26 24, -26 14 Z" fill="#0f766e" stroke="#5eead4" stroke-width="2.5" /><text y="4" text-anchor="middle" fill="#ccfbf1" font-family="monospace" font-size="14" font-weight="700">AC</text></svg>`;
       case 'beta-gal-basal':

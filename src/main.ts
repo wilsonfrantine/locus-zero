@@ -76,7 +76,7 @@ function bootstrap(): void {
         </svg>
       </div>
 
-      <main class="stage-layer">
+      <main class="stage-layer" id="stage-layer">
         <svg
           id="molecular-stage"
           class="molecular-stage"
@@ -86,6 +86,11 @@ function bootstrap(): void {
           role="img"
           aria-label="Palco molecular intracelular"
         ></svg>
+        <div class="stage-zoom-controls" aria-label="Controle de zoom do palco">
+          <button type="button" class="stage-zoom-btn" data-zoom="out" aria-label="Diminuir zoom">&minus;</button>
+          <button type="button" class="stage-zoom-btn stage-zoom-btn--reset" data-zoom="reset" aria-label="Resetar zoom">1&times;</button>
+          <button type="button" class="stage-zoom-btn" data-zoom="in" aria-label="Aumentar zoom">+</button>
+        </div>
       </main>
 
       <div class="hud-layer" id="hud-layer"></div>
@@ -108,7 +113,9 @@ function bootstrap(): void {
   `;
 
   const viewportEl = app.querySelector('.cell-viewport') as HTMLElement;
+  const stageLayerEl = document.getElementById('stage-layer') as HTMLElement;
   const stageSvg = document.getElementById('molecular-stage') as unknown as SVGSVGElement;
+  const zoomResetBtn = app.querySelector('[data-zoom="reset"]') as HTMLButtonElement;
   const hudLayer = document.getElementById('hud-layer') as HTMLElement;
   const landingScreen = document.getElementById('landing-screen') as HTMLElement;
   const startMissionBtn = document.getElementById('start-mission-btn') as HTMLButtonElement;
@@ -116,6 +123,79 @@ function bootstrap(): void {
   const resetProgressBtn = document.getElementById('reset-progress-btn') as HTMLButtonElement;
 
   interaction.attachStage(stageSvg);
+
+  // Zoom e pan isolados no palco (sem conflitar com arraste de 1 dedo nas moléculas)
+  let zoomScale = 1;
+  let panX = 0;
+  let panY = 0;
+  const activeStagePointers = new Map<number, { x: number; y: number }>();
+  let pinchStartDist = 0;
+  let pinchStartScale = 1;
+  let panStart: { x: number; y: number; ox: number; oy: number } | null = null;
+
+  const applyStageTransform = (): void => {
+    if (zoomScale <= 1.01) {
+      zoomScale = 1;
+      panX = 0;
+      panY = 0;
+    }
+    stageSvg.style.transform = `translate(${panX.toFixed(1)}px, ${panY.toFixed(1)}px) scale(${zoomScale.toFixed(3)})`;
+    zoomResetBtn.textContent = `${zoomScale.toFixed(1).replace('.0', '')}×`;
+  };
+
+  for (const btn of app.querySelectorAll<HTMLButtonElement>('.stage-zoom-btn')) {
+    btn.addEventListener('click', () => {
+      const action = btn.dataset.zoom;
+      if (action === 'in') zoomScale = Math.min(2.4, zoomScale + 0.35);
+      else if (action === 'out') zoomScale = Math.max(1, zoomScale - 0.35);
+      else zoomScale = 1;
+      applyStageTransform();
+    });
+  }
+
+  stageLayerEl.addEventListener('pointerdown', (e) => {
+    activeStagePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (activeStagePointers.size === 2) {
+      const pts = [...activeStagePointers.values()];
+      pinchStartDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      pinchStartScale = zoomScale;
+      panStart = null;
+    } else if (
+      activeStagePointers.size === 1 &&
+      zoomScale > 1.01 &&
+      (e.target === stageSvg || e.target === stageLayerEl)
+    ) {
+      panStart = { x: e.clientX, y: e.clientY, ox: panX, oy: panY };
+    }
+  });
+
+  stageLayerEl.addEventListener('pointermove', (e) => {
+    if (!activeStagePointers.has(e.pointerId)) return;
+    activeStagePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (activeStagePointers.size === 2 && pinchStartDist > 0) {
+      const pts = [...activeStagePointers.values()];
+      const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      zoomScale = Math.max(1, Math.min(2.4, pinchStartScale * (dist / pinchStartDist)));
+      applyStageTransform();
+    } else if (activeStagePointers.size === 1 && panStart) {
+      panX = panStart.ox + (e.clientX - panStart.x);
+      panY = panStart.oy + (e.clientY - panStart.y);
+      applyStageTransform();
+    }
+  });
+
+  const endStagePointer = (e: PointerEvent): void => {
+    activeStagePointers.delete(e.pointerId);
+    if (activeStagePointers.size < 2) {
+      pinchStartDist = 0;
+    }
+    if (activeStagePointers.size === 0) {
+      panStart = null;
+    }
+  };
+  stageLayerEl.addEventListener('pointerup', endStagePointer);
+  stageLayerEl.addEventListener('pointercancel', endStagePointer);
 
   const manual = new BenchManual(app, {
     bus,

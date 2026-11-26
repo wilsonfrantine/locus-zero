@@ -106,3 +106,21 @@ Ao concluir os níveis, o aluno informa seu Nome Completo e Matrícula na tela f
 Resumo Visual: Nota final, tempo total e um diagnóstico por tema (ex.: "Ponto forte: Operon lac | Revisar: Remodelamento Cromatínico").
 
 Botão "Exportar Comprovante" (Print/PDF via @media print): Gera um relatório limpo de 1 página contendo os dados do aluno, a tabela de telemetria por nível e um Código de Integridade (hash SHA-256 simples gerado via crypto.subtle combinando matrícula + pontuações + salt fixo) para evitar adulteração trivial da nota.
+
+---
+
+## 7. Modelo Definido de Score ao Vivo, Vidas e Maestria
+*Decisão consolidada para implementação:*
+
+- **Score ao Vivo com Escudo de Exploração + 3 Vidas:**
+  - **Escudo inicial (2 erros):** os 2 primeiros erros na fase são protegidos pelo escudo de exploração (não descontam pontos nem consomem vidas).
+  - **3 Vidas após o escudo:** do 3º ao 5º erro no mesmo fluxo, cada erro desconta pontos do score visível e consome 1 vida (`3 → 2 → 1 → 0`).
+  - **Game Over (5º erro / 0 vidas):** ao perder as 3 vidas, a fase exibe tela de **Game Over** com reinício imediato da fase e incremento do contador de tentativas (`attempts`).
+- **Trava de Saída como Bônus:** ao estabilizar a célula, o aluno já visualiza o score obtido na fase; o Desafio de Mutação concede **pontos de bônus** (ex.: `+20 pts` na 1ª tentativa, `+12 pts` na 2ª, `+6 pts` na 3ª+), sem punir a nota base da simulação.
+- **Aprendizado por Maestria com Transparência:** repetição livre permitida para consolidar o aprendizado, registrando no histórico/comprovante o número de tentativas da fase (ex.: `Concluído na 2ª tentativa`).
+
+### Itens ainda em análise para fases futuras
+- **Variação determinística por matrícula:** embaralhar alternativas ou variar cepas mutantes equivalentes usando a matrícula como semente (anti-cola).
+- **Diagnóstico conceitual por `eventCode`:** recomendações personalizadas por tipo de erro no relatório final.
+- **Selo de investigação experimental:** reconhecimento qualitativo para experimentos de contraste (ex.: testar Canal de Glicose).
+- **Código verificável para Moodle/Classroom:** bloco copiável com resumo e hash SHA-256 além do PDF.

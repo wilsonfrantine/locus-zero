@@ -38,6 +38,7 @@ export class InteractionManager {
 
   private selectedMoleculeId: MoleculeId | null = null;
   private activeDrag: ActiveDragSession | null = null;
+  private activeWindowCleanup: (() => void) | null = null;
 
   private readonly handleStageClick = (event: MouseEvent): void => {
     if (!this.selectedMoleculeId) return;
@@ -176,6 +177,7 @@ export class InteractionManager {
     const onPointerDown = (event: Event): void => {
       const pe = event as PointerEvent;
       if (pe.button !== 0 && pe.pointerType === 'mouse') return;
+      if (pe.isPrimary === false) return;
 
       const latest = this.draggables.get(el)?.config ?? config;
       pe.stopPropagation();
@@ -201,6 +203,7 @@ export class InteractionManager {
         ? { x: pointerSvg.x - latest.origin.x, y: pointerSvg.y - latest.origin.y }
         : { x: 0, y: 0 };
 
+      this.endDragSession(false);
       this.activeDrag = {
         pointerId: pe.pointerId,
         config: latest,
@@ -210,6 +213,18 @@ export class InteractionManager {
         grabOffset,
         ghostEl: null,
         hoveredZoneId: null,
+      };
+
+      const onWinMove = (ev: PointerEvent) => onPointerMove(ev);
+      const onWinUp = (ev: PointerEvent) => onPointerUp(ev);
+      const onWinCancel = (ev: PointerEvent) => onPointerCancel(ev);
+      window.addEventListener('pointermove', onWinMove, { passive: false });
+      window.addEventListener('pointerup', onWinUp);
+      window.addEventListener('pointercancel', onWinCancel);
+      this.activeWindowCleanup = () => {
+        window.removeEventListener('pointermove', onWinMove);
+        window.removeEventListener('pointerup', onWinUp);
+        window.removeEventListener('pointercancel', onWinCancel);
       };
     };
 
@@ -295,17 +310,9 @@ export class InteractionManager {
     };
 
     el.addEventListener('pointerdown', onPointerDown);
-    el.addEventListener('pointermove', onPointerMove);
-    el.addEventListener('pointerup', onPointerUp);
-    el.addEventListener('pointercancel', onPointerCancel);
-    el.addEventListener('lostpointercapture', onPointerCancel);
 
     const cleanup = (): void => {
       el.removeEventListener('pointerdown', onPointerDown);
-      el.removeEventListener('pointermove', onPointerMove);
-      el.removeEventListener('pointerup', onPointerUp);
-      el.removeEventListener('pointercancel', onPointerCancel);
-      el.removeEventListener('lostpointercapture', onPointerCancel);
       el.classList.remove('draggable', 'is-dragging');
       delete el.dataset.selected;
       delete el.dataset.dragging;
@@ -400,6 +407,10 @@ export class InteractionManager {
   }
 
   private endDragSession(keepSelection: boolean): void {
+    if (this.activeWindowCleanup) {
+      this.activeWindowCleanup();
+      this.activeWindowCleanup = null;
+    }
     const session = this.activeDrag;
     if (!session) return;
 

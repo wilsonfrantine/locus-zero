@@ -174,6 +174,24 @@ export const LAC_STAGE_CONTEXT_INFO: Record<string, StageContextInfo> = {
       'Codifica uma enzima acessória que transfere grupos acetil para β-galactosídeos não metabolizáveis, auxiliando na detoxificação celular.',
     hint: 'É transcrita no mesmo mRNA policistrônico junto com lacZ e lacY.',
   },
+  'ext-lactose': {
+    id: 'ext-lactose',
+    tag: 'Meio Externo',
+    role: 'small-molecule',
+    title: 'Lactose Extracelular',
+    description:
+      'Dissacarídeo abundante fora da bactéria após a ingestão de leite. Precisa atravessar a membrana pela permease específica para entrar no citoplasma.',
+    hint: 'Arraste (ou selecione e toque) esta Lactose até o Canal de Lactose na membrana para iniciar o influxo.',
+  },
+  'ext-glucose': {
+    id: 'ext-glucose',
+    tag: 'Experimento de Contraste',
+    role: 'small-molecule',
+    title: 'Glicose Extracelular',
+    description:
+      'Substrato preferencial da bactéria. Quando disponível e importada, inibe a adenilato ciclase na membrana e reduz os níveis de cAMP.',
+    hint: 'Arraste (ou selecione e toque) até o Canal de Glicose para observar a repressão catabólica em ação.',
+  },
 };
 
 export const LAC_EXIT_MUTATION: ExitMutationChallenge = {

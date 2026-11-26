@@ -76,6 +76,7 @@ body {
   height: 100%;
   padding: 68px 0 84px;
   overflow: hidden;
+  touch-action: none;
 }
 
 .molecular-stage {
@@ -85,9 +86,50 @@ body {
   max-height: 100%;
   display: block;
   overflow: visible;
+  touch-action: none;
   user-select: none;
   -webkit-user-select: none;
+  transform-origin: center center;
   filter: var(--shadow-molecule);
+}
+
+.stage-zoom-controls {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .stage-zoom-controls {
+    position: fixed;
+    left: 10px;
+    bottom: 62px;
+    z-index: calc(var(--z-hud) + 1);
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 3px;
+    border-radius: var(--radius-pill);
+    background: rgba(15, 23, 42, 0.84);
+    border: 1px solid var(--hud-border);
+    backdrop-filter: blur(8px);
+  }
+
+  .stage-zoom-btn {
+    min-width: 30px;
+    height: 28px;
+    padding: 0 7px;
+    border: none;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .stage-zoom-btn:active {
+    background: rgba(56, 189, 248, 0.22);
+  }
 }
 
 /* Camada 3: HUD Minimalista */
