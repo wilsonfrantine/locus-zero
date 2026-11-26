@@ -12,8 +12,8 @@ Aplicação web educativa interativa em formato de *Escape Room Intracelular* pa
   - Mudanças alostéricas devem alterar visivelmente a silhueta do SVG (via transição de `path` ou rotação/deformação de subunidades).
 - **Profundidade em 3 Camadas:**
   1. *Fundo (z-index: 1):* Textura citoplasmática/nuclear orgânica muito sutil (granulação e filamentos discretos com baixa opacidade sobre gradiente suave, evitando "holofotes" ou bolhas de degradê chamativas).
-  2. *Palco Molecular (z-index: 10):* Fita de DNA em dupla hélice vetorial minimalista (que se abre sutilmente nos sítios regulatórios e blocos gênicos), membrana celular em arco de borda a borda (`x=0` a `x=1200`, quando aplicável) e moléculas interativas com sombras sutis (`drop-shadow`).
-  3. *HUD Minimalista (z-index: 20):* Barra de status vital da célula no topo, botão discreto do "Manual de Bancada" e o *Pool Molecular* na base. Em telas baixas (`max-height: 500px`), o HUD e o Pool devem se compactar em barras finas para maximizar o palco SVG.
+  2. *Célula (z-index: 10):* Fita de DNA em dupla hélice vetorial minimalista (que se abre sutilmente nos sítios regulatórios e blocos gênicos), membrana celular em arco de borda a borda (`x=0` a `x=1200`, quando aplicável) e moléculas interativas com sombras sutis (`drop-shadow`).
+  3. *HUD Minimalista (z-index: 20):* Barra de status vital da célula no topo, botão discreto do **Notebook** (ícones fechado/aberto) e a barra **Pistas** na base. Em telas baixas (`max-height: 500px`), o HUD e a barra Pistas devem se compactar em barras finas para maximizar a área da Célula.
 - **Briefing Narrativo Inicial & Feedback Discreto:**
   - Cada nível pode apresentar um card de briefing narrativo curto (1–2 passos) antes de liberar o palco (ex.: botão "Entrar na Célula"), substituindo caixas fixas grandes sobre o DNA.
   - Mensagens de feedback de ação (*toasts*) devem ser compactas (máx. 1–2 linhas), posicionadas de forma discreta sem cobrir o DNA ou canais, e desaparecer suavemente de forma automática.
@@ -71,18 +71,18 @@ Impedimento estérico / Bloqueio: Animação de colisão (bump-and-detach: avan�
 
 Transcrição ativa: Deslizamento contínuo da RNA Polimerase sobre o DNA gerando uma fita de mRNA animada via stroke-dashoffset.
 
-6. Mecânica de UI: "Scanner & Pool Molecular"
-Para evitar sobrecarga cognitiva, o aluno descobre as peças no ambiente antes de usá-las:
+6. Mecânica de UI: "Notebook & Pistas Investigativas"
+Para evitar sobrecarga cognitiva e separar consulta de investigação dentro da **Célula**:
 
-Descoberta (Scan): Moléculas novas flutuam na célula com destaque sutil (glow discreto e resposta ao hover/toque, sem anéis tracejados chamativos). Ao clicar/tocar, um card flutuante de 2 linhas explica sua função biológica e a molécula é adicionada ao Pool Molecular (barra inferior fixa com efeito glassmorphism).
+Descoberta (Scan): Moléculas novas flutuam na célula com destaque sutil (glow discreto e resposta ao hover/toque, sem anéis tracejados chamativos). Ao clicar/tocar, abre-se um Popup de Foco centralizado explicando sua função biológica e o item é registrado no **Notebook**.
 
-Canais e Estruturas Interativas: Evitar rótulos instrutivos redundantes (ex.: "FECHADO (clique)"); o estado deve ser comunicado visualmente pela abertura da estrutura e pelo fluxo de partículas, revelando nome/função quando o aluno interagir.
+**Pistas (Barra Inferior):** Exibe **pistas investigativas** curtas (observações e perguntas-guia sem spoiler, com ícone de lupa e marcação `✓` ao concluir cada elo da cadeia causal), estimulando o raciocínio científico sem repetir o acervo do Notebook.
 
-Recrutamento (Drag & Drop): O aluno arrasta moléculas do Pool Molecular diretamente para os sítios-alvo no DNA ou sobre outras proteínas (permitindo crafting molecular, ex.: ligar cAMP à proteína CAP).
+Manipulação Direta: O arraste e o *crafting* (ex.: `cAMP + CAP`, `Fator σ + RNApol`) ocorrem diretamente dentro da **Célula**.
 
 Suporte Híbrido (Desktop + Mobile): Toda ação de arrastar deve funcionar via Pointer Events (pointerdown, pointermove, pointerup) E também permitir o modo alternativo clique-para-selecionar + clique-no-alvo para acessibilidade em telas pequenas.
 
-Manual "Just-in-Time": Botão discreto no canto superior direito que abre uma gaveta lateral com as fichas das moléculas já escaneadas. Se o aluno cometer 2 erros consecutivos no mesmo mecanismo, o botão pulsa suavemente destacando a ficha relevante.
+Notebook (Acervo Pessoal): Botão discreto no canto superior direito com dois ícones (caderno fechado quando recolhido, caderno aberto quando ativo) que abre uma gaveta lateral registrando todas as moléculas, enzimas, canais e genes já explorados pelo aluno. Cada fase deve iniciar o Notebook já populado com uma **anotação inicial de contexto + sugestão do primeiro passo investigativo** (`notebook:note`), orientando o jogador antes mesmo do primeiro *scan*. Se o aluno cometer 2 erros consecutivos no mesmo mecanismo, o botão pulsa suavemente destacando a ficha relevante.
 
 ## 7. Sistema de Áudio (`SoundManager.ts`)
 - **Trilha Sonora por Fase (MP3):** Cada nível pode possuir sua própria trilha ambiente em `public/audio/ambient-<levelId>.mp3`, reproduzida em loop com *fade-in* suave e atenuação (*ducking*) durante popups/modais.

@@ -20,6 +20,15 @@ export const LAC_BRIEFING: LevelBriefing = {
   ctaLabel: 'Entrar na Célula',
 };
 
+export const LAC_INITIAL_NOTE = {
+  id: 'lac-initial-guide',
+  tag: 'Missão · Início',
+  role: 'Guia da Fase',
+  title: 'Crise Metabólica: Como Começar',
+  description:
+    'A E. coli está no intestino com bastante lactose fora da célula e pouca glicose. Primeiro passo: clique nas estruturas da célula para inspecioná-las e tente levar a Lactose externa até o Canal de Lactose na membrana para iniciar a resposta.',
+} as const;
+
 export interface MutationOption {
   id: 'A' | 'B' | 'C';
   text: string;
@@ -48,11 +57,29 @@ export const LAC_MOLECULE_CATALOG: ReadonlyArray<Omit<MoleculeSpec, 'discovered'
   {
     id: 'rnap',
     label: 'RNApol',
-    fullName: 'RNA Polimerase Bacteriana (RNApol)',
+    fullName: 'RNA Polimerase Central (RNApol)',
     role: 'enzyme',
-    summary: 'Reconhece o Promotor (P) e transcreve os genes lacZ, lacY e lacA em um mRNA policistrônico.',
+    summary: 'Enzima central da RNA Polimerase. Precisa se associar ao Fator σ para reconhecer o Promotor (P).',
     manualEntry:
-      'RNA Polimerase (RNApol): Enzima responsável por transcrever os genes lacZ, lacY e lacA em um único mRNA policistrônico.',
+      'RNA Polimerase Central (RNApol): Sem o fator sigma (σ70), a enzima central não possui afinidade específica pelo Promotor. Associe-a ao Fator σ para formar a holoenzima RNApol-σ.',
+  },
+  {
+    id: 'sigma',
+    label: 'Fator σ',
+    fullName: 'Fator Sigma (σ70)',
+    role: 'enzyme',
+    summary: 'Subunidade de reconhecimento do Promotor. Associe à RNApol central para formar a holoenzima ativa.',
+    manualEntry:
+      'Fator Sigma (σ70): Subunidade reguladora bacteriana que confere à RNA Polimerase a capacidade de reconhecer as caixas -35 e -10 do Promotor (P).',
+  },
+  {
+    id: 'rnap-sigma',
+    label: 'RNApol-σ',
+    fullName: 'Holoenzima RNApol-σ',
+    role: 'enzyme',
+    summary: 'Holoenzima ativa capaz de reconhecer o Promotor (P) e transcrever os genes lacZ, lacY e lacA.',
+    manualEntry:
+      'Holoenzima RNApol-σ: Complexo formado pela RNApol central + Fator σ70. Reconhece o Promotor (P) e inicia a síntese do mRNA policistrônico.',
   },
   {
     id: 'allolactose',

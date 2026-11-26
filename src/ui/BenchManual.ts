@@ -1,5 +1,5 @@
 import type { EventBus } from '../core/EventBus';
-import type { MoleculeId, MoleculeSpec } from '../core/types';
+import type { MoleculeId, MoleculeSpec, NotebookNote } from '../core/types';
 
 export interface BenchManualOptions {
   bus: EventBus;
@@ -19,6 +19,7 @@ export class BenchManual {
   private readonly unsubscribers: Array<() => void> = [];
 
   private entries: MoleculeSpec[] = [];
+  private contextNotes: NotebookNote[] = [];
   private highlightedId: MoleculeId | null = null;
   private isOpen = false;
 
@@ -41,14 +42,14 @@ export class BenchManual {
     this.drawerEl.dataset.open = 'false';
     this.drawerEl.setAttribute('role', 'dialog');
     this.drawerEl.setAttribute('aria-modal', 'true');
-    this.drawerEl.setAttribute('aria-label', 'Manual de Bancada');
+    this.drawerEl.setAttribute('aria-label', 'Notebook');
     this.drawerEl.innerHTML = `
       <div class="bench-manual__header">
         <div>
-          <h2 class="bench-manual__title">Manual de Bancada</h2>
-          <p class="bench-manual__subtitle">Fichas desbloqueadas por escaneamento molecular</p>
+          <h2 class="bench-manual__title">Notebook</h2>
+          <p class="bench-manual__subtitle">Anotações desbloqueadas por exploração na célula</p>
         </div>
-        <button type="button" class="bench-manual__close" aria-label="Fechar manual">&times;</button>
+        <button type="button" class="bench-manual__close" aria-label="Fechar Notebook">&times;</button>
       </div>
       <div class="bench-manual__body"></div>
     `;
@@ -63,6 +64,13 @@ export class BenchManual {
     this.unsubscribers.push(
       this.bus.on('pool:updated', ({ molecules }) => {
         this.setEntries(molecules);
+      }),
+      this.bus.on('notebook:note', (note) => {
+        if (!this.contextNotes.some((n) => n.id === note.id)) {
+          this.contextNotes = [...this.contextNotes, note];
+          this.render();
+          this.emitCount();
+        }
       }),
       this.bus.on('manual:hint', ({ moleculeId }) => {
         this.highlightEntry(moleculeId ?? null);
@@ -81,6 +89,13 @@ export class BenchManual {
   setEntries(molecules: MoleculeSpec[]): void {
     this.entries = molecules.filter((m) => m.discovered);
     this.render();
+    this.emitCount();
+  }
+
+  private emitCount(): void {
+    this.bus.emit('notebook:count', {
+      count: this.entries.length + this.contextNotes.length,
+    });
   }
 
   highlightEntry(moleculeId: MoleculeId | null): void {
@@ -107,16 +122,17 @@ export class BenchManual {
     this.isOpen = false;
     this.backdropEl.dataset.open = 'false';
     this.drawerEl.dataset.open = 'false';
+    this.bus.emit('manual:closed', { levelId: this.getCurrentLevelId() });
   }
 
   private render(): void {
     this.bodyEl.innerHTML = '';
 
-    if (this.entries.length === 0) {
+    if (this.entries.length === 0 && this.contextNotes.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'manual-empty';
       empty.textContent =
-        'Nenhuma ficha escaneada ainda. Clique em moléculas livres no ambiente celular para registrar sua função biológica aqui.';
+        'Nenhuma anotação ainda. Clique em moléculas, canais, genes ou enzimas na célula para registrar tudo aqui.';
       this.bodyEl.appendChild(empty);
       return;
     }
@@ -135,6 +151,20 @@ export class BenchManual {
         </div>
         <h3 class="manual-card__name">${this.escapeHtml(entry.fullName)}</h3>
         <p class="manual-card__text">${this.escapeHtml(entry.manualEntry)}</p>
+      `;
+      this.bodyEl.appendChild(card);
+    }
+
+    for (const note of this.contextNotes) {
+      const card = document.createElement('article');
+      card.className = 'manual-card';
+      card.innerHTML = `
+        <div class="manual-card__head">
+          <span class="manual-card__code">${this.escapeHtml(note.tag)}</span>
+          <span class="manual-card__role">Célula</span>
+        </div>
+        <h3 class="manual-card__name">${this.escapeHtml(note.title)}</h3>
+        <p class="manual-card__text">${this.escapeHtml(note.description)}</p>
       `;
       this.bodyEl.appendChild(card);
     }

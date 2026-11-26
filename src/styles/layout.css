@@ -240,33 +240,77 @@ body {
   transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
 }
 
-.hud-zoom-group {
+.hud-zoom-control {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  height: 40px;
-  padding: 2px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--hud-border);
-  background: rgba(30, 41, 59, 0.75);
+  flex-shrink: 0;
 }
 
-.hud-zoom-btn {
-  min-width: 26px;
-  height: 34px;
-  padding: 0 6px;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
+.hud-zoom-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 38px;
+  padding: 0 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--hud-border);
+  background: rgba(30, 41, 59, 0.78);
   color: var(--text-primary);
   font-family: var(--font-mono);
   font-size: 0.76rem;
   font-weight: 700;
-  cursor: pointer;
-  transition: background var(--transition-fast);
+  cursor: ew-resize;
+  touch-action: none;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
 }
 
-.hud-zoom-btn:hover {
-  background: rgba(56, 189, 248, 0.16);
+.hud-zoom-trigger:hover {
+  border-color: rgba(56, 189, 248, 0.55);
+  background: rgba(30, 41, 59, 0.96);
+}
+
+.hud-zoom-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: calc(var(--z-hud) + 5);
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  background: rgba(15, 23, 42, 0.94);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  box-shadow: var(--shadow-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.hud-zoom-control[data-open="true"] .hud-zoom-popover {
+  display: inline-flex;
+}
+
+.hud-zoom-slider {
+  width: 112px;
+  accent-color: var(--dna-backbone);
+  cursor: pointer;
+}
+
+.hud-zoom-reset {
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--hud-border);
+  background: rgba(30, 41, 59, 0.85);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.hud-zoom-reset:hover {
+  border-color: var(--dna-backbone);
 }
 
 .hud-audio-btn {
@@ -302,6 +346,19 @@ body {
   border-color: rgba(56, 189, 248, 0.5);
 }
 
+.hud-notebook-icon--open {
+  display: none;
+}
+
+.hud-manual-btn[data-open="true"] .hud-notebook-icon--closed {
+  display: none;
+}
+
+.hud-manual-btn[data-open="true"] .hud-notebook-icon--open {
+  display: block;
+  color: var(--dna-backbone);
+}
+
 .hud-manual-btn__badge {
   display: inline-flex;
   align-items: center;
@@ -329,16 +386,152 @@ body {
   -webkit-backdrop-filter: blur(12px);
   box-shadow: var(--shadow-glass);
   min-height: 68px;
+  transition: width var(--transition-base), min-height var(--transition-base), padding var(--transition-base);
+}
+
+.molecular-pool[data-collapsed="true"] {
+  width: fit-content;
+  min-height: 40px;
+  padding: 6px 12px;
+  gap: 0;
+}
+
+.molecular-pool[data-collapsed="true"] .molecular-pool__items {
+  display: none;
+}
+
+.molecular-pool__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.molecular-pool__toggle {
+  border: none;
+  background: transparent;
+  padding: 2px 4px;
+  color: inherit;
+  cursor: pointer;
+}
+
+.molecular-pool__chevron {
+  font-size: 0.72rem;
+  color: var(--dna-backbone);
+  line-height: 1;
 }
 
 .molecular-pool__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-family: var(--font-mono);
   font-size: 0.72rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--text-muted);
   white-space: nowrap;
+}
+
+.molecular-pool__icon {
+  color: var(--dna-backbone);
   flex-shrink: 0;
+}
+
+.pistas-stage-pill {
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  background: rgba(56, 189, 248, 0.1);
+  color: var(--dna-backbone);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.pistas-slot--unknown {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: var(--radius-pill);
+  border: 1px dashed rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.42);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.clue-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  max-width: 280px;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  background: rgba(30, 41, 59, 0.85);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color var(--transition-fast), background var(--transition-fast), opacity var(--transition-fast);
+}
+
+.clue-chip:hover {
+  border-color: rgba(56, 189, 248, 0.6);
+  background: rgba(51, 65, 85, 0.9);
+}
+
+.clue-chip[data-solved="true"] {
+  border-color: rgba(16, 185, 129, 0.45);
+  background: rgba(16, 185, 129, 0.14);
+  opacity: 0.82;
+}
+
+.clue-chip__status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(56, 189, 248, 0.2);
+  color: var(--dna-backbone);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.clue-chip[data-solved="true"] .clue-chip__status {
+  background: rgba(16, 185, 129, 0.28);
+  color: var(--activator-color);
+}
+
+.clue-chip__tag {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--dna-backbone);
+  flex-shrink: 0;
+}
+
+.clue-chip[data-solved="true"] .clue-chip__tag {
+  color: var(--activator-color);
+}
+
+.clue-chip__text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .molecular-pool__items {
@@ -347,9 +540,20 @@ body {
   gap: 10px;
   overflow-x: auto;
   overflow-y: hidden;
-  scrollbar-width: thin;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+  cursor: grab;
   flex: 1;
   padding: 2px 0;
+}
+
+.molecular-pool__items::-webkit-scrollbar {
+  display: none;
+}
+
+.molecular-pool__items:active {
+  cursor: grabbing;
 }
 
 .molecular-pool__empty {
@@ -628,11 +832,9 @@ svg [data-selected="true"] {
   padding: 24px;
   background: radial-gradient(
     circle at 50% 35%,
-    rgba(30, 41, 59, 0.88) 0%,
-    rgba(15, 23, 42, 0.96) 72%
+    rgba(15, 23, 42, 0.28) 0%,
+    rgba(7, 13, 24, 0.58) 76%
   );
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   transition: opacity var(--transition-base), visibility var(--transition-base);
 }
 
@@ -643,41 +845,82 @@ svg [data-selected="true"] {
 }
 
 .landing-card {
-  width: min(540px, 100%);
-  padding: 36px 32px;
+  width: min(500px, 100%);
+  padding: 40px 32px 34px;
   border-radius: var(--radius-lg);
-  background: var(--hud-glass);
-  border: 1px solid var(--hud-border);
-  box-shadow: var(--shadow-glass);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.78) 0%, rgba(10, 17, 32, 0.84) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  box-shadow:
+    0 24px 60px rgba(2, 6, 23, 0.62),
+    inset 0 1px 0 rgba(125, 211, 252, 0.16);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   text-align: center;
 }
 
-.landing-card__eyebrow {
-  display: inline-block;
-  margin-bottom: 12px;
-  padding: 4px 12px;
-  border-radius: var(--radius-pill);
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  background: rgba(56, 189, 248, 0.1);
-  color: var(--dna-backbone);
-  font-family: var(--font-mono);
-  font-size: 0.74rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.landing-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.landing-emblem {
+  width: 68px;
+  height: 68px;
+  filter: drop-shadow(0 0 18px rgba(56, 189, 248, 0.28));
 }
 
 .landing-card__title {
-  margin: 0 0 12px;
-  font-size: clamp(1.75rem, 4vw, 2.35rem);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.15;
+  margin: 0;
+  font-size: clamp(2.35rem, 5.2vw, 3.2rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.brand-inner {
+  color: var(--text-primary);
+}
+
+.brand-cell {
+  background: linear-gradient(135deg, #38bdf8 0%, #10b981 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.landing-slogan-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 0 auto 18px;
+  max-width: 340px;
+}
+
+.landing-slogan-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.45), transparent);
+}
+
+.landing-card__slogan {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dna-backbone);
+  white-space: nowrap;
 }
 
 .landing-card__subtitle {
-  margin: 0 0 28px;
-  font-size: 0.98rem;
-  line-height: 1.6;
+  margin: 0 0 26px;
+  font-size: 0.94rem;
+  line-height: 1.5;
   color: var(--text-muted);
 }
 
@@ -686,6 +929,17 @@ svg [data-selected="true"] {
   flex-direction: column;
   align-items: center;
   gap: 12px;
+}
+
+.btn-start-game {
+  gap: 10px;
+  min-width: 210px;
+  letter-spacing: 0.01em;
+}
+
+.btn-start-game__icon {
+  font-size: 0.78rem;
+  line-height: 1;
 }
 
 .btn-primary {
@@ -1294,22 +1548,27 @@ svg [data-selected="true"] {
 
   .status-hud {
     flex-wrap: wrap;
-    gap: 8px;
-    padding: 10px 12px;
+    gap: 6px;
+    padding: 8px 10px;
   }
 
   .status-hud__metrics {
     width: 100%;
     justify-content: space-between;
+    gap: 8px;
+  }
+
+  .health-gauge__label {
+    display: none;
   }
 
   .health-gauge__track {
-    width: 80px;
+    width: clamp(54px, 18vw, 88px);
   }
 
   .hud-manual-btn {
-    min-height: 44px;
-    padding: 0 12px;
+    min-height: 40px;
+    padding: 0 11px;
     font-size: 0.8rem;
   }
 
@@ -1318,7 +1577,11 @@ svg [data-selected="true"] {
     gap: 8px;
   }
 
-  .molecular-pool__label {
+  .hud-manual-btn__label {
+    display: none;
+  }
+
+  .pistas-stage-pill {
     display: none;
   }
 
@@ -1455,33 +1718,77 @@ svg [data-selected="true"] {
     gap: 6px;
   }
 
-  .hud-zoom-group {
+  .hud-zoom-control {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  height: 40px;
-  padding: 2px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--hud-border);
-  background: rgba(30, 41, 59, 0.75);
+  flex-shrink: 0;
 }
 
-.hud-zoom-btn {
-  min-width: 26px;
-  height: 34px;
-  padding: 0 6px;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
+.hud-zoom-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 38px;
+  padding: 0 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--hud-border);
+  background: rgba(30, 41, 59, 0.78);
   color: var(--text-primary);
   font-family: var(--font-mono);
   font-size: 0.76rem;
   font-weight: 700;
-  cursor: pointer;
-  transition: background var(--transition-fast);
+  cursor: ew-resize;
+  touch-action: none;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
 }
 
-.hud-zoom-btn:hover {
-  background: rgba(56, 189, 248, 0.16);
+.hud-zoom-trigger:hover {
+  border-color: rgba(56, 189, 248, 0.55);
+  background: rgba(30, 41, 59, 0.96);
+}
+
+.hud-zoom-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: calc(var(--z-hud) + 5);
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  background: rgba(15, 23, 42, 0.94);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  box-shadow: var(--shadow-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.hud-zoom-control[data-open="true"] .hud-zoom-popover {
+  display: inline-flex;
+}
+
+.hud-zoom-slider {
+  width: 112px;
+  accent-color: var(--dna-backbone);
+  cursor: pointer;
+}
+
+.hud-zoom-reset {
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--hud-border);
+  background: rgba(30, 41, 59, 0.85);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.hud-zoom-reset:hover {
+  border-color: var(--dna-backbone);
 }
 
 .hud-audio-btn {
@@ -1500,6 +1807,14 @@ svg [data-selected="true"] {
     padding: 4px 10px;
     gap: 8px;
     border-radius: var(--radius-sm);
+  }
+
+  .hud-manual-btn__label {
+    display: none;
+  }
+
+  .pistas-stage-pill {
+    display: none;
   }
 
   .molecular-pool__label {

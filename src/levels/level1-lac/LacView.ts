@@ -1,9 +1,10 @@
 import type { ILevel, LevelContext, LevelMetadata } from '../LevelInterface';
-import type { ActionFeedback, MoleculeId, MoleculeSpec } from '../../core/types';
+import type { ActionFeedback, InvestigativeClue, MoleculeId, MoleculeSpec } from '../../core/types';
 import { LacEngine, type LacState } from './LacEngine';
 import {
   LAC_BRIEFING,
   LAC_EXIT_MUTATION,
+  LAC_INITIAL_NOTE,
   LAC_LEVEL_ID,
   LAC_STAGE_CONTEXT_INFO,
   type StageContextInfo,
@@ -46,6 +47,8 @@ export class LacView implements ILevel {
   private capCampEl!: SVGGElement;
   private allolactoseEl!: SVGGElement;
   private rnapEl!: SVGGElement;
+  private sigmaEl!: SVGGElement;
+  private rnapSigmaEl!: SVGGElement;
   private mrnaGroupEl!: SVGGElement;
   private mrnaPathEl!: SVGPathElement;
 
@@ -86,6 +89,7 @@ export class LacView implements ILevel {
 
     this.renderState(this.engine.getState());
     this.syncPoolAndManual();
+    context.bus.emit('notebook:note', { ...LAC_INITIAL_NOTE });
   }
 
   unmount(): void {
@@ -144,13 +148,25 @@ export class LacView implements ILevel {
     const defs = document.createElementNS(SVG_NS, 'defs');
     defs.innerHTML = `
       <linearGradient id="lac-extracellular-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stop-color="#164e63" stop-opacity="0.46" />
-        <stop offset="100%" stop-color="#0e7490" stop-opacity="0.24" />
+        <stop offset="0%" stop-color="#9f4a5b" stop-opacity="0.78" />
+        <stop offset="55%" stop-color="#7c3646" stop-opacity="0.64" />
+        <stop offset="100%" stop-color="#582433" stop-opacity="0.5" />
       </linearGradient>
+      <radialGradient id="lac-lumen-glow" cx="50%" cy="0%" r="75%">
+        <stop offset="0%" stop-color="#e17c8d" stop-opacity="0.22" />
+        <stop offset="60%" stop-color="#9f4a5b" stop-opacity="0.08" />
+        <stop offset="100%" stop-color="#582433" stop-opacity="0" />
+      </radialGradient>
       <linearGradient id="lac-cytoplasm-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stop-color="#0b1322" stop-opacity="0.52" />
-        <stop offset="100%" stop-color="#0f172a" stop-opacity="0.22" />
+        <stop offset="0%" stop-color="#0b1322" stop-opacity="0.54" />
+        <stop offset="55%" stop-color="#0f172a" stop-opacity="0.34" />
+        <stop offset="100%" stop-color="#070d18" stop-opacity="0.56" />
       </linearGradient>
+      <radialGradient id="lac-cytoplasm-illumination" cx="50%" cy="62%" r="58%">
+        <stop offset="0%" stop-color="#1e3a5f" stop-opacity="0.28" />
+        <stop offset="52%" stop-color="#0f243d" stop-opacity="0.14" />
+        <stop offset="100%" stop-color="#020617" stop-opacity="0.24" />
+      </radialGradient>
       <linearGradient id="lac-membrane-grad" x1="0%" y1="0%" x2="0%" y2="100%">
         <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.28" />
         <stop offset="50%" stop-color="#0284c7" stop-opacity="0.16" />
@@ -173,6 +189,18 @@ export class LacView implements ILevel {
           <feMergeNode in="SourceGraphic" />
         </feMerge>
       </filter>
+      <filter id="lac-dna-blur-mid" x="-10%" y="-15%" width="120%" height="130%">
+        <feGaussianBlur stdDeviation="1.3" />
+      </filter>
+      <filter id="lac-dna-blur-far" x="-10%" y="-20%" width="120%" height="140%">
+        <feGaussianBlur stdDeviation="3" />
+      </filter>
+      <clipPath id="lac-roaming-safe-zone">
+        <rect x="-1200" y="-500" width="3600" height="490" />
+      </clipPath>
+      <clipPath id="lac-cytoplasm-roaming-zone">
+        <path d="M -1200 390 Q 600 -150 2400 390 L 2400 1200 L -1200 1200 Z" />
+      </clipPath>
     `;
     svg.appendChild(defs);
 
@@ -183,10 +211,74 @@ export class LacView implements ILevel {
     const membraneGroup = document.createElementNS(SVG_NS, 'g');
     membraneGroup.setAttribute('class', 'cell-membrane');
     membraneGroup.innerHTML = `
-      <!-- Compartimento extracelular (acima da membrana, tom mais claro/esverdeado) -->
+      <!-- Compartimento extracelular (acima da membrana, tom rosado de mucosa/luz intestinal) -->
       <path d="M -1200 -900 L 2400 -900 L 2400 352 Q 600 -188 -1200 352 Z" fill="url(#lac-extracellular-grad)" />
-      <!-- Compartimento intracelular / citoplasma (abaixo da membrana, tom azul profundo) -->
+      <path d="M -1200 -900 L 2400 -900 L 2400 352 Q 600 -188 -1200 352 Z" fill="url(#lac-lumen-glow)" />
+
+      <!-- Parede e pregas da mucosa intestinal (vilosidades sutis estáticas ao fundo) -->
+      <g class="intestinal-mucosa-wall" aria-hidden="true">
+        <path d="M -1200 -240 L 2400 -240 L 2400 -38 Q 2220 -88 2040 -42 Q 1860 6 1680 -46 Q 1500 -94 1320 -44 Q 1140 4 960 -46 Q 780 -96 600 -44 Q 420 8 240 -46 Q 60 -98 -120 -44 Q -300 6 -480 -46 Q -660 -94 -840 -44 Q -1020 4 -1200 -46 Z"
+              fill="#be586b" fill-opacity="0.22" />
+        <path d="M -1200 -240 L 2400 -240 L 2400 -68 Q 2260 -114 2100 -72 Q 1940 -30 1780 -76 Q 1620 -122 1460 -74 Q 1300 -26 1140 -76 Q 980 -124 820 -74 Q 660 -24 500 -76 Q 340 -126 180 -74 Q 20 -24 -140 -76 Q -300 -124 -460 -74 Q -620 -26 -780 -76 Q -940 -124 -1200 -72 Z"
+              fill="#e17c8d" fill-opacity="0.16" />
+        <path d="M -1200 -46 Q -1020 4 -840 -44 Q -660 -94 -480 -46 Q -300 6 -120 -44 Q 60 -98 240 -46 Q 420 8 600 -44 Q 780 -96 960 -46 Q 1140 4 1320 -44 Q 1500 -94 1680 -46 Q 1860 6 2040 -42 Q 2220 -88 2400 -38"
+              fill="none" stroke="#fda4af" stroke-opacity="0.18" stroke-width="1.6" />
+      </g>
+
+      <!-- Faixas de personagens extracelulares espalhados verticalmente acima da área de moléculas (y <= -10) -->
+      <g class="extracellular-silhouettes" clip-path="url(#lac-roaming-safe-zone)" aria-hidden="true">
+        <g transform="translate(0, -112)">
+          <g class="bg-cross-ltr ext-roaming-lane" data-lane="0" style="--cross-duration: 38s; --cross-delay: -6s;"></g>
+        </g>
+        <g transform="translate(0, -86)">
+          <g class="bg-cross-rtl ext-roaming-lane" data-lane="1" style="--cross-duration: 44s; --cross-delay: -20s;"></g>
+        </g>
+        <g transform="translate(0, -60)">
+          <g class="bg-cross-ltr ext-roaming-lane" data-lane="2" style="--cross-duration: 49s; --cross-delay: -34s;"></g>
+        </g>
+        <g transform="translate(0, -36)">
+          <g class="bg-cross-rtl ext-roaming-lane" data-lane="3" style="--cross-duration: 41s; --cross-delay: -11s;"></g>
+        </g>
+      </g>
+      <!-- Compartimento intracelular / citoplasma (abaixo da membrana, profundidade e luz orgânica) -->
       <path d="M -1200 380 Q 600 -160 2400 380 L 2400 1600 L -1200 1600 Z" fill="url(#lac-cytoplasm-grad)" />
+      <path d="M -1200 380 Q 600 -160 2400 380 L 2400 1600 L -1200 1600 Z" fill="url(#lac-cytoplasm-illumination)" />
+
+      <!-- Plasmídeos e polirribossomos dentro do palco (acompanham o zoom e ficam restritos ao citoplasma) -->
+      <g class="cytoplasm-roaming-layer" clip-path="url(#lac-cytoplasm-roaming-zone)" aria-hidden="true">
+        <g transform="translate(0, 265)">
+          <g class="bg-cross-rtl" style="--cross-duration: 50s; --cross-delay: -22s;">
+            <g class="plasmid-spin">
+              <circle cx="0" cy="0" r="15" fill="none" stroke="#7dd3fc" stroke-width="2" />
+              <circle cx="0" cy="0" r="11" fill="none" stroke="#38bdf8" stroke-width="1.1" stroke-dasharray="3 3" />
+            </g>
+          </g>
+        </g>
+        <g transform="translate(0, 575)">
+          <g class="bg-cross-ltr" style="--cross-duration: 44s; --cross-delay: -10s;">
+            <g class="plasmid-spin">
+              <circle cx="0" cy="0" r="22" fill="none" stroke="#38bdf8" stroke-width="2.2" />
+              <circle cx="0" cy="0" r="17" fill="none" stroke="#7dd3fc" stroke-width="1.2" stroke-dasharray="4 3" />
+              <path d="M 15 -16 A 22 22 0 0 1 22 0" fill="none" stroke="#10b981" stroke-width="2.8" stroke-linecap="round" />
+            </g>
+          </g>
+        </g>
+        <g transform="translate(0, 628)">
+          <g class="bg-cross-rtl" style="--cross-duration: 47s; --cross-delay: -16s;">
+            <path d="M -52 4 Q -24 -6 4 4 T 56 2" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" />
+            <g fill="#64748b">
+              <ellipse cx="-34" cy="2" rx="7" ry="5" />
+              <ellipse cx="-34" cy="-3" rx="5" ry="3.5" />
+              <ellipse cx="-8" cy="-1" rx="7" ry="5" />
+              <ellipse cx="-8" cy="-6" rx="5" ry="3.5" />
+              <ellipse cx="18" cy="3" rx="7" ry="5" />
+              <ellipse cx="18" cy="-2" rx="5" ry="3.5" />
+              <ellipse cx="42" cy="1" rx="7" ry="5" />
+              <ellipse cx="42" cy="-4" rx="5" ry="3.5" />
+            </g>
+          </g>
+        </g>
+      </g>
 
       <!-- Moléculas de lactose externas difundindo lentamente da direita para a esquerda -->
       <g class="extracellular-lactose" aria-hidden="true">
@@ -328,6 +420,14 @@ export class LacView implements ILevel {
                C 1134 428, 1146 480, 1172 480"
             stroke="url(#lac-dna-grad)" stroke-width="6.5" stroke-linecap="round" fill="none" />
 
+      <!-- Pontes de hidrogênio contínuas (opacas) atrás dos genes estruturais -->
+      <g class="genes-basepair-backdrop" stroke="var(--dna-backbone)" stroke-opacity="0.14" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        ${Array.from({ length: 32 }, (_, i) => {
+          const x = 674 + i * 14;
+          return `<line x1="${x}" y1="432" x2="${x}" y2="488" />`;
+        }).join('')}
+      </g>
+
       <!-- Cassetes dos genes estruturais lacZ, lacY, lacA (abertura da dupla hélice) -->
       <g class="genes-structural">
         <g class="gene-cassette" data-gene="gene-lacz" role="button" tabindex="0" aria-label="Gene lacZ">
@@ -444,6 +544,8 @@ export class LacView implements ILevel {
     this.capCampEl = this.createCapCampNode();
     this.allolactoseEl = this.createAllolactoseNode();
     this.rnapEl = this.createRnapNode();
+    this.sigmaEl = this.createSigmaNode();
+    this.rnapSigmaEl = this.createRnapSigmaNode();
 
     root.append(
       membraneGroup,
@@ -452,6 +554,8 @@ export class LacView implements ILevel {
       this.laciEl,
       this.capCampEl,
       this.rnapEl,
+      this.rnapSigmaEl,
+      this.sigmaEl,
       this.capEl,
       this.campEl,
       this.allolactoseEl,
@@ -459,11 +563,87 @@ export class LacView implements ILevel {
       this.extGlucoseEl,
     );
     svg.appendChild(root);
+    this.initExtracellularRoaming(membraneGroup);
+  }
+
+  private initExtracellularRoaming(container: SVGGElement): void {
+    const templates: string[] = [
+      // 0: Streptococcus (cadeia sinuosa de cocos)
+      `<g transform="rotate(-10) scale(0.95)">
+        <circle cx="-30" cy="4" r="7.5" fill="#fda4af" />
+        <circle cx="-15" cy="-2" r="7.5" fill="#fda4af" />
+        <circle cx="0" cy="-4" r="7.5" fill="#fda4af" />
+        <circle cx="15" cy="1" r="7.5" fill="#fda4af" />
+        <circle cx="30" cy="6" r="7" fill="#fda4af" />
+        <circle cx="44" cy="3" r="7" fill="#fda4af" />
+      </g>`,
+      // 1: Staphylococcus / Coccus (cacho)
+      `<g transform="scale(0.88)">
+        <circle cx="0" cy="0" r="7.5" fill="#fda4af" />
+        <circle cx="12" cy="-5" r="7" fill="#fecdd3" />
+        <circle cx="13" cy="8" r="7.5" fill="#fda4af" />
+        <circle cx="-11" cy="7" r="7" fill="#fecdd3" />
+        <circle cx="1" cy="14" r="6.8" fill="#fda4af" />
+        <circle cx="-10" cy="-6" r="6.5" fill="#fda4af" />
+      </g>`,
+      // 2: Diplococo
+      `<g transform="rotate(16) scale(0.85)">
+        <circle cx="-7" cy="0" r="8" fill="#fecdd3" />
+        <circle cx="8" cy="0" r="8" fill="#fda4af" />
+      </g>`,
+      // 3: Vibrio / Espiroqueta
+      `<g transform="rotate(8) scale(0.88)">
+        <path d="M -18 4 Q -4 -10 14 2 T 34 -2" fill="none" stroke="#fecdd3" stroke-width="6.5" stroke-linecap="round" />
+        <path d="M -18 4 Q -28 10 -36 6" fill="none" stroke="#fecdd3" stroke-width="1.2" stroke-linecap="round" />
+      </g>`,
+      // 4: Easter egg — E. coli vizinha fugindo de um fago T4
+      `<g>
+        <g transform="translate(-26, 0) rotate(-4)">
+          <rect x="-22" y="-8" width="44" height="16" rx="8" fill="#fda4af" stroke="#fecdd3" stroke-width="1" />
+          <path d="M 22 -3 Q 34 -8 44 -2 M 22 3 Q 36 8 46 3" fill="none" stroke="#fecdd3" stroke-width="1" stroke-linecap="round" />
+        </g>
+        <g transform="translate(36, -2) rotate(-78) scale(0.75)">
+          <polygon points="0,-13 9,-6 7,6 -7,6 -9,-6" fill="#fbcfe8" />
+          <line x1="0" y1="6" x2="0" y2="18" stroke="#fbcfe8" stroke-width="2" />
+          <path d="M 0 18 L -8 24 M 0 18 L 8 24" fill="none" stroke="#fbcfe8" stroke-width="1.2" stroke-linecap="round" />
+        </g>
+      </g>`,
+      // 5: Easter egg — Fago T4 de óculos escuros
+      `<g transform="rotate(8) scale(0.92)">
+        <polygon points="0,-15 11,-6 9,7 -9,7 -11,-6" fill="#fbcfe8" />
+        <rect x="-8" y="-7" width="7" height="4.5" rx="1.2" fill="#0f172a" />
+        <rect x="1" y="-7" width="7" height="4.5" rx="1.2" fill="#0f172a" />
+        <line x1="-1" y1="-5" x2="1" y2="-5" stroke="#0f172a" stroke-width="1.2" />
+        <line x1="0" y1="7" x2="0" y2="21" stroke="#fbcfe8" stroke-width="2" />
+        <path d="M 0 21 L -10 28 M 0 21 L 10 28 M 0 21 L -5 30 M 0 21 L 5 30" fill="none" stroke="#fbcfe8" stroke-width="1.2" stroke-linecap="round" />
+      </g>`,
+      // 6: Easter egg — Micro-tardígrado distante
+      `<g transform="rotate(-10) scale(0.72)">
+        <ellipse cx="0" cy="0" rx="22" ry="11" fill="#fecdd3" />
+        <circle cx="-20" cy="0" r="6" fill="#fecdd3" />
+        <path d="M -10 9 L -12 16 M -2 10 L -3 17 M 7 10 L 6 17 M 15 8 L 15 15" fill="none" stroke="#fecdd3" stroke-width="2.6" stroke-linecap="round" />
+      </g>`,
+    ];
+
+    const lanes = container.querySelectorAll<SVGGElement>('.ext-roaming-lane');
+    lanes.forEach((lane, idx) => {
+      let currentIdx = (idx * 2) % templates.length;
+      lane.innerHTML = templates[currentIdx];
+
+      lane.addEventListener('animationiteration', () => {
+        let nextIdx = Math.floor(Math.random() * templates.length);
+        if (nextIdx === currentIdx) {
+          nextIdx = (nextIdx + 1) % templates.length;
+        }
+        currentIdx = nextIdx;
+        lane.innerHTML = templates[currentIdx];
+      });
+    });
   }
 
   private createCircularChromosomeBackdrop(): SVGGElement {
     const group = document.createElementNS(SVG_NS, 'g');
-    group.setAttribute('class', 'circular-chromosome-backdrop');
+    group.setAttribute('class', 'circular-chromosome-backdrop chromosome-depth-sway');
     group.setAttribute('aria-hidden', 'true');
     group.style.pointerEvents = 'none';
 
@@ -522,7 +702,9 @@ export class LacView implements ILevel {
 
     const steps = 84;
     const pts = Array.from({ length: steps + 1 }, (_, i) => sampleArc(i / steps));
-    const parts: string[] = [];
+    const nearParts: string[] = [];
+    const midParts: string[] = [];
+    const farParts: string[] = [];
 
     for (let i = 0; i < steps; i++) {
       const a = pts[i];
@@ -532,20 +714,25 @@ export class LacView implements ILevel {
       const widthComp = (1.3 + 2.6 * p).toFixed(2);
       const opMain = (0.14 + 0.44 * p).toFixed(2);
       const opComp = (0.1 + 0.32 * p).toFixed(2);
+      const bucket = p >= 0.72 ? nearParts : p >= 0.45 ? midParts : farParts;
 
       if (i % 3 === 1) {
-        parts.push(
+        bucket.push(
           `<line x1="${a.x1.toFixed(1)}" y1="${a.y1.toFixed(1)}" x2="${a.x2.toFixed(1)}" y2="${a.y2.toFixed(1)}" stroke="#38bdf8" stroke-opacity="${(0.06 + 0.16 * p).toFixed(2)}" stroke-width="${(0.9 + 1.1 * p).toFixed(2)}" stroke-linecap="round" />`,
         );
       }
 
-      parts.push(
+      bucket.push(
         `<line x1="${a.x2.toFixed(1)}" y1="${a.y2.toFixed(1)}" x2="${b.x2.toFixed(1)}" y2="${b.y2.toFixed(1)}" stroke="#7dd3fc" stroke-opacity="${opComp}" stroke-width="${widthComp}" stroke-linecap="round" />`,
         `<line x1="${a.x1.toFixed(1)}" y1="${a.y1.toFixed(1)}" x2="${b.x1.toFixed(1)}" y2="${b.y1.toFixed(1)}" stroke="#38bdf8" stroke-opacity="${opMain}" stroke-width="${widthMain}" stroke-linecap="round" />`,
       );
     }
 
-    group.innerHTML = parts.join('');
+    group.innerHTML = `
+      <g class="chromosome-layer chromosome-layer--far" filter="url(#lac-dna-blur-far)">${farParts.join('')}</g>
+      <g class="chromosome-layer chromosome-layer--mid" filter="url(#lac-dna-blur-mid)">${midParts.join('')}</g>
+      <g class="chromosome-layer chromosome-layer--near">${nearParts.join('')}</g>
+    `;
     return group;
   }
 
@@ -978,11 +1165,11 @@ export class LacView implements ILevel {
     const body = document.createElementNS(SVG_NS, 'g');
     body.setAttribute('class', 'mol-visual');
 
-    // Forma inicial ligada ao Operador: ombro estérico à esquerda bloqueia fisicamente a RNApol + sítio alostérico em losango
+    // Forma inicial ligada ao Operador: ombro estérico à esquerda bloqueia fisicamente a RNApol + sítio alostérico na porção superior posterior
     this.laciPathEl = document.createElementNS(SVG_NS, 'path');
     this.laciPathEl.setAttribute(
       'd',
-      'M -98 2 C -98 -38, 42 -42, 42 -22 L 42 -12 L 22 2 L 42 16 L 42 26 L 24 26 L 0 64 L -24 26 L -92 26 C -98 26, -98 14, -98 2 Z',
+      'M -98 2 C -98 -24, -84 -36, -70 -36 L -56 -18 L -42 -36 C -14 -38, 42 -34, 42 -14 L 42 20 C 42 26, 34 26, 24 26 L 0 64 L -24 26 L -92 26 C -98 26, -98 18, -98 2 Z',
     );
     this.laciPathEl.setAttribute('fill', 'var(--repressor-color)');
     this.laciPathEl.setAttribute('stroke', '#fda4af');
@@ -990,14 +1177,15 @@ export class LacView implements ILevel {
     this.laciPathEl.setAttribute('stroke-linejoin', 'round');
 
     this.laciLigandEl = document.createElementNS(SVG_NS, 'g');
-    this.laciLigandEl.setAttribute('transform', 'translate(36, 2)');
+    this.laciLigandEl.setAttribute('transform', 'translate(-56, -32)');
     this.laciLigandEl.setAttribute('opacity', '0');
     this.laciLigandEl.innerHTML = `
       <polygon points="0,-14 15,0 0,14 -15,0" fill="var(--small-molecule)" stroke="#fef3c7" stroke-width="1.5" />
     `;
 
     const label = document.createElementNS(SVG_NS, 'text');
-    label.setAttribute('y', '-4');
+    label.setAttribute('x', '-20');
+    label.setAttribute('y', '2');
     label.setAttribute('text-anchor', 'middle');
     label.setAttribute('dominant-baseline', 'central');
     label.setAttribute('fill', '#fff1f2');
@@ -1125,16 +1313,61 @@ export class LacView implements ILevel {
     body.setAttribute('class', 'mol-visual brownian');
     body.style.setProperty('--brownian-duration', '6.4s');
 
-    // Enzima com pé retangular inferior compatível com Promotor (P) e saída dorsal de mRNA nascente
+    // Enzima central (sem Fator σ: não possui o pé específico de reconhecimento do Promotor)
+    body.innerHTML = `
+      <path d="M -46 -12 C -46 -38, 46 -38, 46 -12 L 42 18 C 20 26, -20 26, -42 18 Z"
+            fill="var(--enzyme-core)" fill-opacity="0.86" stroke="#a5b4fc" stroke-width="2.2" stroke-linejoin="round" />
+      <text y="-4" text-anchor="middle" dominant-baseline="central" fill="#eef2ff" font-family="var(--font-mono)" font-size="13" font-weight="700">RNApol</text>
+      <circle class="drop-zone-hitarea" r="56" />
+    `;
+
+    group.append(halo, body);
+    return group;
+  }
+
+  private createSigmaNode(): SVGGElement {
+    const group = document.createElementNS(SVG_NS, 'g');
+    group.setAttribute('id', 'mol-sigma');
+    group.setAttribute('class', 'stage-molecule');
+    group.setAttribute('transform', 'translate(650, 165)');
+
+    const halo = this.createScanHalo('#c084fc', 36);
+    const body = document.createElementNS(SVG_NS, 'g');
+    body.setAttribute('class', 'mol-visual brownian');
+    body.style.setProperty('--brownian-duration', '4.8s');
+    body.style.setProperty('--brownian-delay', '-0.9s');
+
+    body.innerHTML = `
+      <path d="M -22 -14 C -22 -24, 22 -24, 22 -14 L 18 10 L 14 10 L 14 24 L -14 24 L -14 10 L -18 10 Z"
+            fill="#a855f7" stroke="#e9d5ff" stroke-width="2" stroke-linejoin="round" />
+      <text y="-4" text-anchor="middle" dominant-baseline="central" fill="#faf5ff" font-family="var(--font-mono)" font-size="11.5" font-weight="700">Fator σ</text>
+      <circle class="drop-zone-hitarea" r="46" />
+    `;
+
+    group.append(halo, body);
+    return group;
+  }
+
+  private createRnapSigmaNode(): SVGGElement {
+    const group = document.createElementNS(SVG_NS, 'g');
+    group.setAttribute('id', 'mol-rnap-sigma');
+    group.setAttribute('transform', 'translate(755, 210)');
+
+    const body = document.createElementNS(SVG_NS, 'g');
+    body.setAttribute('class', 'mol-visual brownian');
+    body.style.setProperty('--brownian-duration', '6.1s');
+
+    // Holoenzima completa: RNApol + subunidade σ formando o encaixe retangular do Promotor (P)
     body.innerHTML = `
       <path class="rnap-nascent-mrna mrna-flow-strand" d="M -8 -34 Q -24 -64, -6 -92 T -18 -134"
             fill="none" stroke="var(--mrna-strand)" stroke-width="4.5" stroke-linecap="round" opacity="0" />
       <path d="M -50 -14 C -50 -42, 50 -42, 50 -14 L 46 16 L 34 16 L 34 42 L -34 42 L -34 16 L -46 16 Z"
-            fill="var(--enzyme-core)" stroke="#a5b4fc" stroke-width="2.4" stroke-linejoin="round" />
-      <text y="-8" text-anchor="middle" dominant-baseline="central" fill="#eef2ff" font-family="var(--font-mono)" font-size="13.5" font-weight="700">RNApol</text>
+            fill="var(--enzyme-core)" stroke="#a5b4fc" stroke-width="2.4" stroke-linejoin="round" filter="url(#lac-soft-glow)" />
+      <path d="M -26 14 L 26 14 L 26 42 L -26 42 Z" fill="#a855f7" fill-opacity="0.92" stroke="#e9d5ff" stroke-width="1.6" />
+      <text y="-8" text-anchor="middle" dominant-baseline="central" fill="#eef2ff" font-family="var(--font-mono)" font-size="12.5" font-weight="700">RNApol-σ</text>
     `;
 
-    group.append(halo, body);
+    group.append(body);
     return group;
   }
 
@@ -1263,6 +1496,9 @@ export class LacView implements ILevel {
           this.showMoleculeFocusPopup(spec);
         }
       }),
+      this.context.bus.on('clues:inspect', ({ clue }) => {
+        this.showClueFocusPopup(clue);
+      }),
       this.context.bus.on('interaction:selection-changed', ({ moleculeId }) => {
         if (moleculeId === 'ext-lactose' || moleculeId === 'ext-glucose') {
           this.openContextPopup(moleculeId);
@@ -1357,10 +1593,21 @@ export class LacView implements ILevel {
 
     if (result.feedback.eventCode === 'BUMP_REPRESSOR') {
       this.triggerRnapBumpAnimation();
-    } else if (result.feedback.eventCode === 'COMPLEX_FORMED') {
+    } else if (result.feedback.eventCode === 'COMPLEX_FORMED' || result.feedback.eventCode === 'CAP_CAMP_BOUND') {
       this.triggerSnapAnimation(this.capCampEl);
-    } else if (result.feedback.eventCode === 'CAP_CAMP_BOUND') {
-      this.triggerSnapAnimation(this.capCampEl);
+    } else if (result.feedback.eventCode === 'RNAP_SIGMA_FORMED') {
+      this.triggerSnapAnimation(this.rnapSigmaEl);
+    } else if (result.feedback.eventCode === 'LACTOSE_INFLUX') {
+      const extLac = LAC_STAGE_CONTEXT_INFO['ext-lactose'];
+      if (extLac) {
+        this.context.bus.emit('notebook:note', {
+          id: extLac.id,
+          tag: extLac.tag,
+          role: extLac.role,
+          title: extLac.title,
+          description: `${extLac.description} ${extLac.hint}`,
+        });
+      }
     }
   }
 
@@ -1389,17 +1636,17 @@ export class LacView implements ILevel {
       this.laciEl.setAttribute('transform', 'translate(570, 412)');
       this.laciPathEl.setAttribute(
         'd',
-        'M -98 2 C -98 -38, 42 -42, 42 -22 L 42 -12 L 22 2 L 42 16 L 42 26 L 24 26 L 0 64 L -24 26 L -92 26 C -98 26, -98 14, -98 2 Z',
+        'M -98 2 C -98 -24, -84 -36, -70 -36 L -56 -18 L -42 -36 C -14 -38, 42 -34, 42 -14 L 42 20 C 42 26, 34 26, 24 26 L 0 64 L -24 26 L -92 26 C -98 26, -98 18, -98 2 Z',
       );
       this.laciLigandEl.setAttribute('opacity', '0');
       this.laciEl.querySelector('.mol-visual')?.classList.remove('brownian');
     } else {
       this.laciEl.dataset.state = 'detached';
       this.laciEl.setAttribute('transform', 'translate(610, 236)');
-      // Perde a saliência triangular inferior ao mudar de conformação, mantendo o sítio alostérico em losango
+      // Perde a saliência triangular inferior ao mudar de conformação, mantendo o sítio alostérico na porção superior posterior
       this.laciPathEl.setAttribute(
         'd',
-        'M -46 -22 C -46 -42, 42 -42, 42 -22 L 42 -12 L 22 2 L 42 16 L 42 24 C 22 30, -24 30, -46 24 Z',
+        'M -98 2 C -98 -24, -84 -36, -70 -36 L -56 -18 L -42 -36 C -14 -38, 36 -34, 36 -14 L 36 18 C 36 28, -24 30, -92 26 C -98 26, -98 18, -98 2 Z',
       );
       this.laciLigandEl.setAttribute('opacity', '1');
       this.laciEl.querySelector('.mol-visual')?.classList.add('brownian');
@@ -1432,27 +1679,34 @@ export class LacView implements ILevel {
     this.allolactoseEl.style.display = state.allolactoseAvailable ? '' : 'none';
     this.setHaloVisible(this.allolactoseEl, !state.discoveredIds.includes('allolactose'));
 
-    // 4. Atualiza RNAP e mRNA policistrônico
+    // 4. Atualiza RNApol central, Fator σ, holoenzima RNApol-σ e mRNA policistrônico
+    this.rnapEl.style.display = state.rnapSigmaCrafted ? 'none' : '';
     this.setHaloVisible(this.rnapEl, !state.discoveredIds.includes('rnap'));
-    const rnapVisual = this.rnapEl.querySelector('.mol-visual');
-    rnapVisual?.classList.remove('rnap-glide-basal', 'rnap-glide-high');
 
-    if (state.rnapBound && !this.isBumpingRnap) {
-      rnapVisual?.classList.remove('brownian');
-      this.rnapEl.setAttribute('transform', 'translate(415, 432)');
+    const showSigma = state.sigmaAvailable && !state.rnapSigmaCrafted;
+    this.sigmaEl.style.display = showSigma ? '' : 'none';
+    this.setHaloVisible(this.sigmaEl, !state.discoveredIds.includes('sigma'));
+
+    this.rnapSigmaEl.style.display = state.rnapSigmaCrafted ? '' : 'none';
+    const rnapSigmaVisual = this.rnapSigmaEl.querySelector('.mol-visual');
+    rnapSigmaVisual?.classList.remove('rnap-glide-basal', 'rnap-glide-high');
+
+    if (state.rnapSigmaCrafted && state.rnapBound && !this.isBumpingRnap) {
+      rnapSigmaVisual?.classList.remove('brownian');
+      this.rnapSigmaEl.setAttribute('transform', 'translate(415, 432)');
       if (state.transcriptionRate === 'BASAL') {
-        rnapVisual?.classList.add('rnap-glide-basal');
+        rnapSigmaVisual?.classList.add('rnap-glide-basal');
       } else if (state.transcriptionRate === 'HIGH') {
-        rnapVisual?.classList.add('rnap-glide-high');
+        rnapSigmaVisual?.classList.add('rnap-glide-high');
       }
-    } else if (!this.isBumpingRnap) {
-      this.rnapEl.setAttribute('transform', 'translate(755, 210)');
-      rnapVisual?.classList.add('brownian');
+    } else if (state.rnapSigmaCrafted && !this.isBumpingRnap) {
+      this.rnapSigmaEl.setAttribute('transform', 'translate(755, 210)');
+      rnapSigmaVisual?.classList.add('brownian');
     }
 
     this.mrnaGroupEl.dataset.transcription = state.transcriptionRate;
     this.ribosomeGroupEl.dataset.rate = state.transcriptionRate;
-    const nascentMrna = this.rnapEl.querySelector('.rnap-nascent-mrna') as SVGPathElement | null;
+    const nascentMrna = this.rnapSigmaEl.querySelector('.rnap-nascent-mrna') as SVGPathElement | null;
     if (state.transcriptionRate === 'NONE') {
       this.mrnaGroupEl.style.opacity = '0';
       if (nascentMrna) nascentMrna.setAttribute('opacity', '0');
@@ -1538,7 +1792,7 @@ export class LacView implements ILevel {
         x: 415,
         y: 445,
         hitRadius: 76,
-        accepts: (id) => id === 'rnap',
+        accepts: (id) => id === 'rnap-sigma' || id === 'rnap',
       }),
       interaction.registerDropZone({
         id: 'zone-operator',
@@ -1546,7 +1800,7 @@ export class LacView implements ILevel {
         x: 570,
         y: 445,
         hitRadius: 76,
-        accepts: (id) => id === 'allolactose' || id === 'rnap',
+        accepts: (id) => id === 'allolactose' || id === 'rnap-sigma' || id === 'rnap',
       }),
       interaction.registerDropZone({
         id: 'target-laci',
@@ -1578,16 +1832,65 @@ export class LacView implements ILevel {
         role: 'small-molecule',
         origin: { x: 995, y: 36 },
       }),
-      interaction.registerDraggable({
-        moleculeId: 'rnap',
-        element: this.rnapEl,
-        source: 'stage',
-        discovered: discovered.has('rnap'),
-        label: 'RNApol',
-        role: 'enzyme',
-        origin: state.rnapBound ? { x: 415, y: 432 } : { x: 755, y: 210 },
-      }),
     );
+
+    if (!state.rnapSigmaCrafted) {
+      this.interactionCleanups.push(
+        interaction.registerDraggable({
+          moleculeId: 'rnap',
+          element: this.rnapEl,
+          source: 'stage',
+          discovered: discovered.has('rnap'),
+          label: 'RNApol',
+          role: 'enzyme',
+          origin: { x: 755, y: 210 },
+        }),
+        interaction.registerDropZone({
+          id: 'stage-craft-rnap',
+          element: this.rnapEl,
+          x: 755,
+          y: 210,
+          hitRadius: 68,
+          accepts: (id) => id === 'sigma',
+        }),
+      );
+    }
+
+    if (state.sigmaAvailable && !state.rnapSigmaCrafted) {
+      this.interactionCleanups.push(
+        interaction.registerDraggable({
+          moleculeId: 'sigma',
+          element: this.sigmaEl,
+          source: 'stage',
+          discovered: discovered.has('sigma'),
+          label: 'Fator σ',
+          role: 'enzyme',
+          origin: { x: 650, y: 165 },
+        }),
+        interaction.registerDropZone({
+          id: 'stage-craft-sigma',
+          element: this.sigmaEl,
+          x: 650,
+          y: 165,
+          hitRadius: 58,
+          accepts: (id) => id === 'rnap',
+        }),
+      );
+    }
+
+    if (state.rnapSigmaCrafted) {
+      this.interactionCleanups.push(
+        interaction.registerDraggable({
+          moleculeId: 'rnap-sigma',
+          element: this.rnapSigmaEl,
+          source: 'stage',
+          discovered: true,
+          label: 'RNApol-σ',
+          role: 'enzyme',
+          origin: state.rnapBound ? { x: 415, y: 432 } : { x: 755, y: 210 },
+        }),
+      );
+    }
 
     if (!(state.capCampCrafted && state.campAvailable)) {
       this.interactionCleanups.push(
@@ -1664,11 +1967,53 @@ export class LacView implements ILevel {
 
   private syncPoolAndManual(): void {
     if (!this.engine || !this.context) return;
+    const state = this.engine.getState();
     const specs = this.engine.getMoleculeSpecs();
+
     this.context.bus.emit('pool:updated', {
       molecules: specs,
       selectedId: this.context.interaction.getSelectedMoleculeId(),
     });
+
+    const clues: InvestigativeClue[] = [
+      {
+        id: 'clue-membrane',
+        tag: 'Membrana',
+        shortText: 'Como a lactose entra?',
+        detailText:
+          'Há lactose abundante no meio externo, mas ela não atravessa a bicamada lipídica sozinha. Como ativar seu transporte para o citoplasma?',
+        solved: state.lactoseOpen,
+      },
+      {
+        id: 'clue-operator',
+        tag: 'Operador',
+        shortText: 'Algo bloqueia o DNA...',
+        detailText:
+          'O repressor LacI ocupa o Operador (O) e impede fisicamente a passagem da polimerase. Que molécula citoplasmática pode alterar sua conformação?',
+        solved: !state.repressorBound,
+      },
+      {
+        id: 'clue-cap',
+        tag: 'Sítio CAP',
+        shortText: 'Escassez de glicose',
+        detailText:
+          'Sem glicose, um sinalizador se acumula no citoplasma. Qual proteína ativadora ele modifica para dobrar o DNA e estabilizar a transcrição?',
+        solved: state.capCampBound,
+      },
+    ];
+
+    if (state.sigmaAvailable || state.rnapSigmaCrafted) {
+      clues.push({
+        id: 'clue-sigma',
+        tag: 'Promotor',
+        shortText: 'Subunidade da RNApol',
+        detailText:
+          'A RNApol central não reconhece o Promotor (P) sozinha. Uma subunidade σ acabou de surgir no citoplasma — associe-as para formar a holoenzima ativa.',
+        solved: state.rnapBound && state.rnapSigmaCrafted,
+      });
+    }
+
+    this.context.bus.emit('clues:updated', { clues });
   }
 
   private updateChannelVisual(channelEl: SVGGElement, open: boolean): void {
@@ -1688,12 +2033,13 @@ export class LacView implements ILevel {
       window.clearTimeout(this.bumpTimer);
     }
     this.isBumpingRnap = true;
-    const visual = this.rnapEl.querySelector('.mol-visual');
+    const targetEl = this.engine?.getState().rnapSigmaCrafted ? this.rnapSigmaEl : this.rnapEl;
+    const visual = targetEl.querySelector('.mol-visual');
     visual?.classList.remove('brownian', 'is-bumping');
-    this.rnapEl.setAttribute('transform', 'translate(415, 430)');
+    targetEl.setAttribute('transform', 'translate(415, 430)');
 
     // Força reflow SVG para reiniciar a animação de colisão
-    void this.rnapEl.getBoundingClientRect();
+    void targetEl.getBoundingClientRect();
     visual?.classList.add('is-bumping');
 
     this.bumpTimer = window.setTimeout(() => {
@@ -1728,7 +2074,7 @@ export class LacView implements ILevel {
       <p class="focus-popup__detail">${spec.manualEntry}</p>
       <div class="focus-popup__footer">
         <button type="button" class="btn-primary focus-popup__ok">${
-          this.pendingFlySpec ? 'Guardar no Pool Molecular' : 'Entendi'
+          this.pendingFlySpec ? 'Registrar no Notebook' : 'Entendi'
         }</button>
       </div>
     `;
@@ -1739,6 +2085,14 @@ export class LacView implements ILevel {
   private openContextPopup(contextId: string): void {
     const info: StageContextInfo | undefined = LAC_STAGE_CONTEXT_INFO[contextId];
     if (!info || !this.engine) return;
+
+    this.context?.bus.emit('notebook:note', {
+      id: info.id,
+      tag: info.tag,
+      role: info.role,
+      title: info.title,
+      description: `${info.description} ${info.hint}`,
+    });
 
     const state = this.engine.getState();
     const isOpenChannel =
@@ -1782,6 +2136,34 @@ export class LacView implements ILevel {
     this.openFocusPopupEl();
   }
 
+  private showClueFocusPopup(clue: InvestigativeClue): void {
+    this.pendingFlySpec = null;
+    this.focusPopupCardEl.innerHTML = `
+      <div class="focus-popup__head">
+        <div class="focus-popup__thumb" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--dna-backbone)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+        </div>
+        <div class="focus-popup__heading">
+          <span class="scan-card__tag" data-role="small-molecule">${clue.tag}</span>
+          <h3 class="focus-popup__title" id="focus-popup-title">${clue.shortText}</h3>
+        </div>
+        <button type="button" class="focus-popup__close" aria-label="Fechar janela">&times;</button>
+      </div>
+      <p class="focus-popup__body">${clue.detailText}</p>
+      <p class="focus-popup__detail">Estado: ${
+        clue.solved ? '✓ Etapa já resolvida na célula.' : 'Em investigação — explore e teste na célula.'
+      }</p>
+      <div class="focus-popup__footer">
+        <button type="button" class="btn-primary focus-popup__ok">Voltar à Célula</button>
+      </div>
+    `;
+
+    this.openFocusPopupEl();
+  }
+
   private openFocusPopupEl(): void {
     this.focusPopupBackdropEl.hidden = false;
     this.focusPopupBackdropEl.dataset.open = 'true';
@@ -1804,12 +2186,12 @@ export class LacView implements ILevel {
   }
 
   private animateCopyToPool(spec: MoleculeSpec): void {
-    const targetChip = document.querySelector(`.pool-chip[data-molecule-id="${spec.id}"]`) as HTMLElement | null;
-    const endRect = targetChip?.getBoundingClientRect();
+    const targetBtn = document.querySelector('.hud-manual-btn') as HTMLElement | null;
+    const endRect = targetBtn?.getBoundingClientRect();
     const startX = window.innerWidth * 0.5;
     const startY = window.innerHeight * 0.48;
-    const endX = endRect ? endRect.left + endRect.width / 2 : window.innerWidth * 0.5;
-    const endY = endRect ? endRect.top + endRect.height / 2 : window.innerHeight - 44;
+    const endX = endRect ? endRect.left + endRect.width / 2 : window.innerWidth - 70;
+    const endY = endRect ? endRect.top + endRect.height / 2 : 34;
 
     const token = document.createElement('div');
     token.className = 'pool-fly-token';
@@ -1826,9 +2208,9 @@ export class LacView implements ILevel {
 
     window.setTimeout(() => {
       token.remove();
-      if (targetChip) {
-        targetChip.classList.add('is-snapping');
-        window.setTimeout(() => targetChip.classList.remove('is-snapping'), 420);
+      if (targetBtn) {
+        targetBtn.classList.add('is-snapping');
+        window.setTimeout(() => targetBtn.classList.remove('is-snapping'), 420);
       }
     }, 520);
   }
@@ -1838,7 +2220,11 @@ export class LacView implements ILevel {
       case 'laci':
         return `<svg viewBox="-64 -48 118 116"><path d="M -56 2 C -56 -34, 38 -38, 38 -20 L 38 -11 L 20 2 L 38 15 L 38 22 L 20 22 L 0 54 L -20 22 L -52 22 Z" fill="var(--repressor-color)" stroke="#fda4af" stroke-width="3" /></svg>`;
       case 'rnap':
-        return `<svg viewBox="-56 -46 112 96"><path d="M -46 -14 C -46 -38, 46 -38, 46 -14 L 42 14 L 30 14 L 30 38 L -30 38 L -30 14 L -42 14 Z" fill="var(--enzyme-core)" stroke="#a5b4fc" stroke-width="3" /></svg>`;
+        return `<svg viewBox="-52 -42 104 78"><path d="M -42 -10 C -42 -34, 42 -34, 42 -10 L 38 14 C 18 22, -18 22, -38 14 Z" fill="var(--enzyme-core)" stroke="#a5b4fc" stroke-width="3" /></svg>`;
+      case 'sigma':
+        return `<svg viewBox="-30 -30 60 60"><path d="M -20 -12 C -20 -22, 20 -22, 20 -12 L 16 8 L 12 8 L 12 22 L -12 22 L -12 8 L -16 8 Z" fill="#a855f7" stroke="#e9d5ff" stroke-width="2.4" /></svg>`;
+      case 'rnap-sigma':
+        return `<svg viewBox="-56 -46 112 96"><path d="M -46 -14 C -46 -38, 46 -38, 46 -14 L 42 14 L 30 14 L 30 38 L -30 38 L -30 14 L -42 14 Z" fill="var(--enzyme-core)" stroke="#a5b4fc" stroke-width="3" /><path d="M -24 12 L 24 12 L 24 38 L -24 38 Z" fill="#a855f7" stroke="#e9d5ff" stroke-width="2" /></svg>`;
       case 'cap':
         return `<svg viewBox="-44 -40 88 80"><path d="M -32 -16 C -32 -30, 32 -30, 32 -16 L 28 16 C 14 24, -14 24, -28 16 Z" fill="var(--activator-color)" stroke="#6ee7b7" stroke-width="3" /></svg>`;
       case 'camp':

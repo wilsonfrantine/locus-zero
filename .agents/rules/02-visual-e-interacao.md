@@ -5,9 +5,9 @@
 - Todo palco principal de nível deve usar `<svg viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid meet">` com componentes vetoriais limpos (sem PNG/JPG ou WebGL).
 - Priorize geometria funcional de encaixe (chave-fechadura), alterações visuais claras em mudanças alostéricas/conformacionais e profundidade em 3 camadas:
   1. Fundo com textura citoplasmática/nuclear orgânica muito sutil (granulação/filamentos discretos, sem bolhas/holofotes fortes).
-  2. Palco molecular com DNA em dupla hélice vetorial minimalista (abrindo sutilmente nos sítios de encaixe/genes) e membrana em arco de borda a borda (`x=0` a `x=1200`) quando aplicável.
-  3. HUD discreto, sem caixas fixas grandes sobrepondo o palco; use briefing narrativo inicial antes do palco e *toasts* compactos (1–2 linhas) com desaparecimento automático.
-- Mantenha rótulos dentro das moléculas curtos e evite ruído visual: sem anéis tracejados chamativos para Scan (use glow sutil / resposta ao hover/toque) e sem rótulos instrutivos redundantes nos canais (estado comunicado visualmente por abertura e fluxo); explicações ficam no Popup de Foco, no Manual de Bancada ou no feedback da ação.
+  2. Célula com DNA em dupla hélice vetorial minimalista (abrindo sutilmente nos sítios de encaixe/genes) e membrana em arco de borda a borda (`x=0` a `x=1200`) quando aplicável.
+  3. HUD discreto, sem caixas fixas grandes sobrepondo a Célula; use briefing narrativo inicial antes de entrar e *toasts* compactos com botão fechar.
+- Mantenha rótulos dentro das moléculas curtos e evite ruído visual: sem anéis tracejados chamativos para Scan (use glow sutil / resposta ao hover/toque) e sem rótulos instrutivos redundantes nos canais (estado comunicado visualmente por abertura e fluxo); explicações ficam no Popup de Foco, no **Notebook** (ícone fechado/aberto) ou na barra **Pistas** (ícone de lupa, lotes progressivos sem duplicar arraste).
 - Grafe todas as citações de nomes científicos (ex.: *Escherichia coli*, *E. coli*) em itálico (`<em>`) na UI e nos textos didáticos.
 
 ## Animações e Responsividade

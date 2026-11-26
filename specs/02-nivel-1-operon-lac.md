@@ -20,16 +20,18 @@
   3. `zone-operator` (**Operador `O`**): Encaixe triangular âmbar (inicia **ocupado** pelo repressor `LacI`).
   4. `genes-structural` (**`lacZ` | `lacY` | `lacA`**): Região de leitura onde a `RNApol` desliza gerando a fita de mRNA policistrônico.
 
-## 3. Catálogo de Moléculas (Scanner & Pool)
-As moléculas não descobertas flutuam com destaque sutil (glow discreto e resposta ao hover/toque, sem anéis tracejados chamativos). Ao clicar em uma molécula, abre-se um **Popup de Foco** centralizado; ao fechá-lo no primeiro *scan*, uma cópia animada vai ao Pool Molecular (onde pode ser clicada novamente para reabrir a explicação).
+## 3. Catálogo de Moléculas, Notebook & Pistas Investigativas
+Todas as moléculas, estruturas celulares (canais, enzimas, genes) e a `Lactose` externa clicadas na **Célula** são registradas no **Notebook**. A barra **Pistas** exibe pistas investigativas progressivas que guiam o raciocínio sem entregar a resposta.
 | ID | Label | Estado Inicial | Função / Comportamento |
 | :--- | :--- | :--- | :--- |
-| `laci` | `LacI` | Preso em `zone-operator` (já visível, clicável para Scan) | Repressor. Bloqueia fisicamente a `RNApol`. Possui bolsão lateral para `allolactose`. |
-| `rnap` | `RNApol` | Flutuando (requer Scan) | RNA Polimerase. Encaixa em `zone-promoter`. |
+| `laci` | `LacI` | Preso em `zone-operator` (já visível, clicável para Scan) | Repressor. Bloqueia fisicamente a `RNApol-σ`. Possui bolsão lateral em losango para `allolactose`. |
+| `rnap` | `RNApol` | Flutuando (requer Scan) | Enzima central da RNA Polimerase. Sozinha **não reconhece** o Promotor; precisa associar-se ao `Fator σ`. |
+| `sigma` | `Fator σ` | Surge no citoplasma quando `Canal de Lactose` está aberto e `CAP-cAMP` ligado ao DNA (requer Scan) | Subunidade $\sigma^{70}$ de reconhecimento do Promotor. Arrastar sobre `RNApol` forma a holoenzima `RNApol-σ`. |
+| `rnap-sigma` | `RNApol-σ` | Criado via *crafting* (`Fator σ` + `RNApol`) | Holoenzima ativa. Reconhece e encaixa em `zone-promoter`. |
 | `allolactose` | `Alolactose` | Formada no citoplasma ao abrir o Canal de Lactose (requer Scan) | Indutor gerado pela conversão da lactose via atividade basal residual de $\beta$-galactosidase. Ao ser arrastada sobre `LacI`, causa mudança alostérica e solta o repressor do DNA. |
 | `cap` | `CAP` | Flutuando (requer Scan) | Proteína ativadora. Sozinha tem formato fechado e **não encaixa** em `zone-cap`. |
 | `camp` | `cAMP` | Flutuando em alta concentração quando Glicose está fechada (requer Scan) | Sinalizador de escassez de glicose. Arrastar `cAMP` sobre `CAP` realiza *crafting* e forma o complexo ativo `cap-camp`. |
-| `cap-camp` | `CAP-cAMP` | Criado via *crafting* (`cAMP` + `CAP`) | Complexo ativo com formato semicircular aberto. Encaixa em `zone-cap` e estabiliza a `RNAP`. |
+| `cap-camp` | `CAP-cAMP` | Criado via *crafting* (`cAMP` + `CAP`) | Complexo ativo com formato semicircular aberto. Encaixa em `zone-cap`, dobra o DNA e estabiliza a `RNApol-σ`. |
 
 ## 4. Máquina de Estados Biológicos (`LacEngine.ts`)
 A engine avalia a combinação atual do estado e retorna o nível de transcrição:

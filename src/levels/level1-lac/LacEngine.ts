@@ -13,6 +13,8 @@ export interface LacState {
   campAvailable: boolean;        // !glucoseOpen
   allolactoseAvailable: boolean; // lactoseOpen
   capCampCrafted: boolean;       // false até crafting (e limpo se glicose entrar)
+  sigmaAvailable: boolean;       // lactoseOpen && capCampBound
+  rnapSigmaCrafted: boolean;     // false até crafting Fator σ + RNApol
   cellHealth: number;            // 15 | 30 | 100
   discoveredIds: MoleculeId[];
 }
@@ -25,6 +27,8 @@ export interface LacTransitionResult {
 
 const CAP_CRAFT_TARGETS = new Set<ZoneId>(['stage-craft-cap', 'pool-craft-cap', 'target-cap']);
 const CAMP_CRAFT_TARGETS = new Set<ZoneId>(['stage-craft-camp', 'pool-craft-camp', 'target-camp']);
+const RNAP_CRAFT_TARGETS = new Set<ZoneId>(['stage-craft-rnap', 'target-rnap']);
+const SIGMA_CRAFT_TARGETS = new Set<ZoneId>(['stage-craft-sigma', 'target-sigma']);
 const LACI_TARGETS = new Set<ZoneId>(['zone-operator', 'target-laci']);
 
 /**
@@ -57,6 +61,12 @@ export class LacEngine {
         available = this.state.campAvailable;
       } else if (item.id === 'cap-camp') {
         available = this.state.capCampCrafted && this.state.campAvailable;
+      } else if (item.id === 'sigma') {
+        available = this.state.sigmaAvailable && !this.state.rnapSigmaCrafted;
+      } else if (item.id === 'rnap') {
+        available = !this.state.rnapSigmaCrafted;
+      } else if (item.id === 'rnap-sigma') {
+        available = this.state.rnapSigmaCrafted;
       }
 
       return {
@@ -99,6 +109,7 @@ export class LacEngine {
         ...this.state,
         lactoseOpen: true,
         allolactoseAvailable: true,
+        sigmaAvailable: this.state.capCampBound,
       };
       return {
         state: this.getState(),
@@ -125,6 +136,7 @@ export class LacEngine {
       ...this.state,
       lactoseOpen: false,
       allolactoseAvailable: false,
+      sigmaAvailable: false,
       repressorBound: nextRepressorBound,
       rnapBound: nextRnapBound,
       ...derived,
@@ -157,6 +169,7 @@ export class LacEngine {
         campAvailable: false,
         capCampCrafted: false,
         capCampBound: nextCapCampBound,
+        sigmaAvailable: false,
         ...derived,
       };
 
@@ -365,6 +378,7 @@ export class LacEngine {
       this.state = {
         ...this.state,
         capCampBound: nextCapCampBound,
+        sigmaAvailable: this.state.lactoseOpen && nextCapCampBound,
         ...derived,
       };
 
@@ -393,8 +407,72 @@ export class LacEngine {
       };
     }
 
-    // 4. Recrutamento da RNAP no Promotor
+    // 3b. Crafting simétrico Fator σ <-> RNApol central -> Holoenzima RNApol-σ
+    const isSigmaOnRnap = moleculeId === 'sigma' && RNAP_CRAFT_TARGETS.has(targetZoneId);
+    const isRnapOnSigma = moleculeId === 'rnap' && SIGMA_CRAFT_TARGETS.has(targetZoneId);
+
+    if (isSigmaOnRnap || isRnapOnSigma) {
+      if (!this.state.sigmaAvailable) {
+        return {
+          state: this.getState(),
+          recordInTelemetry: true,
+          feedback: {
+            valid: false,
+            eventCode: 'SIGMA_NOT_READY',
+            hintMoleculeId: 'sigma',
+            message: 'O Fator σ só fica disponível após abrir o Canal de Lactose e ligar CAP-cAMP ao DNA.',
+          },
+        };
+      }
+
+      if (this.state.rnapSigmaCrafted) {
+        return {
+          state: this.getState(),
+          recordInTelemetry: false,
+          feedback: {
+            valid: true,
+            eventCode: 'RNAP_SIGMA_ALREADY_FORMED',
+            message: 'A holoenzima RNApol-σ já está montada e pronta para reconhecer o Promotor (P).',
+          },
+        };
+      }
+
+      const discoveredIds = this.state.discoveredIds.includes('rnap-sigma')
+        ? this.state.discoveredIds
+        : [...this.state.discoveredIds, 'rnap-sigma'];
+
+      this.state = {
+        ...this.state,
+        rnapSigmaCrafted: true,
+        discoveredIds,
+      };
+
+      return {
+        state: this.getState(),
+        recordInTelemetry: true,
+        feedback: {
+          valid: true,
+          eventCode: 'RNAP_SIGMA_FORMED',
+          message: 'Holoenzima RNApol-σ montada! Agora ela reconhece especificamente o Promotor (P).',
+        },
+      };
+    }
+
+    // 4. Recrutamento da RNApol no Promotor (exige Fator σ)
     if (moleculeId === 'rnap' && targetZoneId === 'zone-promoter') {
+      return {
+        state: this.getState(),
+        recordInTelemetry: true,
+        feedback: {
+          valid: false,
+          eventCode: 'RNAP_NEEDS_SIGMA',
+          hintMoleculeId: 'sigma',
+          message: 'A RNApol central não reconhece o Promotor sozinha! Associe-a ao Fator σ primeiro.',
+        },
+      };
+    }
+
+    if (moleculeId === 'rnap-sigma' && targetZoneId === 'zone-promoter') {
       if (this.state.repressorBound) {
         return {
           state: this.getState(),
@@ -404,7 +482,7 @@ export class LacEngine {
             eventCode: 'BUMP_REPRESSOR',
             hintMoleculeId: 'laci',
             message:
-              'Bloqueio físico! O repressor LacI impede a passagem da RNA Polimerase.',
+              'Bloqueio físico! O repressor LacI impede a passagem da RNApol-σ.',
           },
         };
       }
@@ -477,7 +555,7 @@ export class LacEngine {
       };
     }
 
-    if (moleculeId === 'rnap' && targetZoneId === 'zone-operator') {
+    if ((moleculeId === 'rnap' || moleculeId === 'rnap-sigma') && targetZoneId === 'zone-operator') {
       return {
         state: this.getState(),
         recordInTelemetry: true,
@@ -524,6 +602,8 @@ export class LacEngine {
       campAvailable: true,
       allolactoseAvailable: false,
       capCampCrafted: false,
+      sigmaAvailable: false,
+      rnapSigmaCrafted: false,
       cellHealth: 15,
       discoveredIds,
     };

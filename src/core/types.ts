@@ -112,10 +112,37 @@ export interface DraggableConfig {
   origin?: SvgPoint;
 }
 
+export interface InvestigativeClue {
+  id: string;
+  tag: string;           // Ex: "Membrana", "Operador", "Sinal", "Promotor"
+  shortText: string;     // Texto curto na barra Pistas
+  detailText: string;    // Pergunta/orientação investigativa no Popup de Foco
+  solved: boolean;
+}
+
+export interface NotebookNote {
+  id: string;
+  tag: string;
+  role: string;
+  title: string;
+  description: string;
+}
+
 export interface AppEventMap {
   'hud:update': HudStatusState;
-  'pool:updated': { molecules: MoleculeSpec[]; selectedId: MoleculeId | null };
+  'pool:updated': {
+    molecules: MoleculeSpec[];
+    selectedId: MoleculeId | null;
+  };
+  'clues:updated': {
+    clues: InvestigativeClue[];
+  };
+  'clues:inspect': {
+    clue: InvestigativeClue;
+  };
   'pool:inspect': { moleculeId: MoleculeId };
+  'notebook:note': NotebookNote;
+  'notebook:count': { count: number };
   'interaction:scan': { moleculeId: MoleculeId };
   'interaction:selection-changed': { moleculeId: MoleculeId | null };
   'interaction:apply': {
@@ -125,6 +152,7 @@ export interface AppEventMap {
   };
   'feedback:action': ActionFeedback;
   'manual:opened': { levelId: string; moleculeId?: MoleculeId };
+  'manual:closed': { levelId: string };
   'manual:hint': { moleculeId?: MoleculeId; consecutiveErrors: number };
   'assessment:updated': { state: PersistedAssessmentState };
   'level:completed': { levelId: string; nextLevelId: string | null };

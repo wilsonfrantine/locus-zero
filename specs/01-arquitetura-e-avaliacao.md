@@ -26,9 +26,9 @@ locus-zero/
 │   │   │   └── lacData.ts        # Textos do Manual de Bancada e Mutação de Saída
 │   │   └── ... (demais níveis seguem o mesmo padrão)
 │   ├── ui/
-│   │   ├── MolecularPool.ts      # Barra inferior de moléculas escaneadas
-│   │   ├── BenchManual.ts        # Gaveta lateral "Just-in-Time"
-│   │   ├── StatusHUD.ts          # Barra superior de saúde celular e progresso
+│   │   ├── MolecularPool.ts      # Barra inferior "Pistas" (lotes progressivos + consulta)
+│   │   ├── BenchManual.ts        # Gaveta lateral "Notebook" (ícones fechado/aberto)
+│   │   ├── StatusHUD.ts          # Barra superior de saúde celular, zoom, áudio e progresso
 │   │   └── ReportModal.ts        # Tela final com nota, diagnóstico e exportação
 │   └── styles/
 │       ├── tokens.css            # Paleta semântica e tipografia (ver spec 00)
