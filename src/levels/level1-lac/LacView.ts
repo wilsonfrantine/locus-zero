@@ -1098,7 +1098,7 @@ export class LacView implements ILevel {
     const group = document.createElementNS(SVG_NS, 'g');
     group.setAttribute('id', 'mol-allolactose');
     group.setAttribute('class', 'stage-molecule');
-    group.setAttribute('transform', 'translate(340, 210)');
+    group.setAttribute('transform', 'translate(320, 248)');
 
     const halo = this.createScanHalo('var(--small-molecule)', 36);
     const body = document.createElementNS(SVG_NS, 'g');
@@ -1118,7 +1118,7 @@ export class LacView implements ILevel {
     const group = document.createElementNS(SVG_NS, 'g');
     group.setAttribute('id', 'mol-rnap');
     group.setAttribute('class', 'stage-molecule');
-    group.setAttribute('transform', 'translate(415, 200)');
+    group.setAttribute('transform', 'translate(755, 210)');
 
     const halo = this.createScanHalo('var(--enzyme-core)', 50);
     const body = document.createElementNS(SVG_NS, 'g');
@@ -1446,7 +1446,7 @@ export class LacView implements ILevel {
         rnapVisual?.classList.add('rnap-glide-high');
       }
     } else if (!this.isBumpingRnap) {
-      this.rnapEl.setAttribute('transform', 'translate(415, 200)');
+      this.rnapEl.setAttribute('transform', 'translate(755, 210)');
       rnapVisual?.classList.add('brownian');
     }
 
@@ -1585,7 +1585,7 @@ export class LacView implements ILevel {
         discovered: discovered.has('rnap'),
         label: 'RNApol',
         role: 'enzyme',
-        origin: { x: 415, y: state.rnapBound ? 432 : 200 },
+        origin: state.rnapBound ? { x: 415, y: 432 } : { x: 755, y: 210 },
       }),
     );
 
@@ -1656,7 +1656,7 @@ export class LacView implements ILevel {
           discovered: discovered.has('allolactose'),
           label: 'Alolactose',
           role: 'small-molecule',
-          origin: { x: 340, y: 210 },
+          origin: { x: 320, y: 248 },
         }),
       );
     }
