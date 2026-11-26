@@ -6,6 +6,7 @@ export interface StatusHUDOptions {
   onOpenManual: () => void;
   onToggleAudio?: () => boolean;
   initialMuted?: boolean;
+  onZoomChange?: (action: 'in' | 'out' | 'reset') => void;
 }
 
 /**
@@ -18,6 +19,7 @@ export class StatusHUD {
   private readonly statusEl: HTMLElement;
   private readonly healthFillEl: HTMLElement;
   private readonly healthValueEl: HTMLElement;
+  private readonly zoomResetBtnEl: HTMLButtonElement;
   private readonly audioBtnEl: HTMLButtonElement;
   private readonly manualBtnEl: HTMLButtonElement;
   private readonly manualBadgeEl: HTMLElement;
@@ -43,6 +45,11 @@ export class StatusHUD {
           </div>
           <span class="health-gauge__value">100%</span>
         </div>
+        <div class="hud-zoom-group" aria-label="Controle de zoom do palco">
+          <button type="button" class="hud-zoom-btn" data-zoom="out" aria-label="Diminuir zoom">&minus;</button>
+          <button type="button" class="hud-zoom-btn hud-zoom-btn--reset" data-zoom="reset" aria-label="Resetar zoom">1&times;</button>
+          <button type="button" class="hud-zoom-btn" data-zoom="in" aria-label="Aumentar zoom">+</button>
+        </div>
         <button type="button" class="hud-audio-btn" aria-label="Alternar som" title="Som / Mudo">
           <svg class="hud-audio-btn__icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
@@ -62,9 +69,19 @@ export class StatusHUD {
     this.statusEl = this.root.querySelector('.status-hud__status') as HTMLElement;
     this.healthFillEl = this.root.querySelector('.health-gauge__fill') as HTMLElement;
     this.healthValueEl = this.root.querySelector('.health-gauge__value') as HTMLElement;
+    this.zoomResetBtnEl = this.root.querySelector('.hud-zoom-btn--reset') as HTMLButtonElement;
     this.audioBtnEl = this.root.querySelector('.hud-audio-btn') as HTMLButtonElement;
     this.manualBtnEl = this.root.querySelector('.hud-manual-btn') as HTMLButtonElement;
     this.manualBadgeEl = this.root.querySelector('.hud-manual-btn__badge') as HTMLElement;
+
+    for (const btn of this.root.querySelectorAll<HTMLButtonElement>('.hud-zoom-btn')) {
+      btn.addEventListener('click', () => {
+        const action = btn.dataset.zoom as 'in' | 'out' | 'reset' | undefined;
+        if (action && options.onZoomChange) {
+          options.onZoomChange(action);
+        }
+      });
+    }
 
     this.setAudioMuted(Boolean(options.initialMuted));
     this.audioBtnEl.addEventListener('click', () => {
@@ -113,6 +130,10 @@ export class StatusHUD {
     this.audioBtnEl.dataset.muted = muted ? 'true' : 'false';
     this.audioBtnEl.setAttribute('aria-pressed', muted ? 'true' : 'false');
     this.audioBtnEl.title = muted ? 'Ativar som' : 'Silenciar som';
+  }
+
+  setZoomScale(scale: number): void {
+    this.zoomResetBtnEl.textContent = `${scale.toFixed(1).replace('.0', '')}×`;
   }
 
   destroy(): void {

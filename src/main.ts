@@ -86,11 +86,6 @@ function bootstrap(): void {
           role="img"
           aria-label="Palco molecular intracelular"
         ></svg>
-        <div class="stage-zoom-controls" aria-label="Controle de zoom do palco">
-          <button type="button" class="stage-zoom-btn" data-zoom="out" aria-label="Diminuir zoom">&minus;</button>
-          <button type="button" class="stage-zoom-btn stage-zoom-btn--reset" data-zoom="reset" aria-label="Resetar zoom">1&times;</button>
-          <button type="button" class="stage-zoom-btn" data-zoom="in" aria-label="Aumentar zoom">+</button>
-        </div>
       </main>
 
       <div class="hud-layer" id="hud-layer"></div>
@@ -115,7 +110,6 @@ function bootstrap(): void {
   const viewportEl = app.querySelector('.cell-viewport') as HTMLElement;
   const stageLayerEl = document.getElementById('stage-layer') as HTMLElement;
   const stageSvg = document.getElementById('molecular-stage') as unknown as SVGSVGElement;
-  const zoomResetBtn = app.querySelector('[data-zoom="reset"]') as HTMLButtonElement;
   const hudLayer = document.getElementById('hud-layer') as HTMLElement;
   const landingScreen = document.getElementById('landing-screen') as HTMLElement;
   const startMissionBtn = document.getElementById('start-mission-btn') as HTMLButtonElement;
@@ -124,34 +118,49 @@ function bootstrap(): void {
 
   interaction.attachStage(stageSvg);
 
-  // Zoom e pan isolados no palco (sem conflitar com arraste de 1 dedo nas moléculas)
   let zoomScale = 1;
   let panX = 0;
   let panY = 0;
+  let applyStageTransform = (): void => {};
+
+  const manual = new BenchManual(app, {
+    bus,
+    getCurrentLevelId: () => activeLevelId,
+  });
+
+  const hud = new StatusHUD(hudLayer, {
+    bus,
+    onOpenManual: () => manual.open(),
+    onToggleAudio: () => sound.toggleMute(),
+    initialMuted: sound.isMuted(),
+    onZoomChange: (action) => {
+      if (action === 'in') zoomScale = Math.min(2.4, zoomScale + 0.35);
+      else if (action === 'out') zoomScale = Math.max(1, zoomScale - 0.35);
+      else zoomScale = 1;
+      applyStageTransform();
+    },
+  });
+
+  // Zoom e pan isolados no palco (sem conflitar com arraste de 1 dedo nas moléculas)
   const activeStagePointers = new Map<number, { x: number; y: number }>();
   let pinchStartDist = 0;
   let pinchStartScale = 1;
   let panStart: { x: number; y: number; ox: number; oy: number } | null = null;
 
-  const applyStageTransform = (): void => {
+  applyStageTransform = (): void => {
     if (zoomScale <= 1.01) {
       zoomScale = 1;
       panX = 0;
       panY = 0;
+    } else {
+      const maxPanX = stageLayerEl.clientWidth * (zoomScale - 1) * 0.55 + 160;
+      const maxPanY = stageLayerEl.clientHeight * (zoomScale - 1) * 0.55 + 100;
+      panX = Math.max(-maxPanX, Math.min(maxPanX, panX));
+      panY = Math.max(-maxPanY, Math.min(maxPanY, panY));
     }
     stageSvg.style.transform = `translate(${panX.toFixed(1)}px, ${panY.toFixed(1)}px) scale(${zoomScale.toFixed(3)})`;
-    zoomResetBtn.textContent = `${zoomScale.toFixed(1).replace('.0', '')}×`;
+    hud.setZoomScale(zoomScale);
   };
-
-  for (const btn of app.querySelectorAll<HTMLButtonElement>('.stage-zoom-btn')) {
-    btn.addEventListener('click', () => {
-      const action = btn.dataset.zoom;
-      if (action === 'in') zoomScale = Math.min(2.4, zoomScale + 0.35);
-      else if (action === 'out') zoomScale = Math.max(1, zoomScale - 0.35);
-      else zoomScale = 1;
-      applyStageTransform();
-    });
-  }
 
   stageLayerEl.addEventListener('pointerdown', (e) => {
     activeStagePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -160,11 +169,14 @@ function bootstrap(): void {
       pinchStartDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
       pinchStartScale = zoomScale;
       panStart = null;
-    } else if (
-      activeStagePointers.size === 1 &&
-      zoomScale > 1.01 &&
-      (e.target === stageSvg || e.target === stageLayerEl)
-    ) {
+      return;
+    }
+
+    const targetEl = e.target as Element | null;
+    const isInteractiveTarget = Boolean(
+      targetEl?.closest('.draggable, .membrane-channel, .auto-enzyme, .gene-cassette'),
+    );
+    if (activeStagePointers.size === 1 && zoomScale > 1.01 && !isInteractiveTarget) {
       panStart = { x: e.clientX, y: e.clientY, ox: panX, oy: panY };
     }
   });
@@ -196,18 +208,6 @@ function bootstrap(): void {
   };
   stageLayerEl.addEventListener('pointerup', endStagePointer);
   stageLayerEl.addEventListener('pointercancel', endStagePointer);
-
-  const manual = new BenchManual(app, {
-    bus,
-    getCurrentLevelId: () => activeLevelId,
-  });
-
-  const hud = new StatusHUD(hudLayer, {
-    bus,
-    onOpenManual: () => manual.open(),
-    onToggleAudio: () => sound.toggleMute(),
-    initialMuted: sound.isMuted(),
-  });
 
   const pool = new MolecularPool(hudLayer, {
     bus,

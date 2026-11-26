@@ -93,45 +93,6 @@ body {
   filter: var(--shadow-molecule);
 }
 
-.stage-zoom-controls {
-  display: none;
-}
-
-@media (max-width: 900px) {
-  .stage-zoom-controls {
-    position: fixed;
-    left: 10px;
-    bottom: 62px;
-    z-index: calc(var(--z-hud) + 1);
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-    padding: 3px;
-    border-radius: var(--radius-pill);
-    background: rgba(15, 23, 42, 0.84);
-    border: 1px solid var(--hud-border);
-    backdrop-filter: blur(8px);
-  }
-
-  .stage-zoom-btn {
-    min-width: 30px;
-    height: 28px;
-    padding: 0 7px;
-    border: none;
-    border-radius: var(--radius-pill);
-    background: transparent;
-    color: var(--text-primary);
-    font-family: var(--font-mono);
-    font-size: 0.78rem;
-    font-weight: 700;
-    cursor: pointer;
-  }
-
-  .stage-zoom-btn:active {
-    background: rgba(56, 189, 248, 0.22);
-  }
-}
-
 /* Camada 3: HUD Minimalista */
 .hud-layer {
   position: absolute;
@@ -277,6 +238,35 @@ body {
   font-weight: 600;
   cursor: pointer;
   transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.hud-zoom-group {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding: 2px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--hud-border);
+  background: rgba(30, 41, 59, 0.75);
+}
+
+.hud-zoom-btn {
+  min-width: 26px;
+  height: 34px;
+  padding: 0 6px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.hud-zoom-btn:hover {
+  background: rgba(56, 189, 248, 0.16);
 }
 
 .hud-audio-btn {
@@ -1442,6 +1432,17 @@ svg [data-selected="true"] {
     height: 6px;
   }
 
+  .hud-zoom-group {
+    height: 30px;
+  }
+
+  .hud-zoom-btn {
+    min-width: 22px;
+    height: 24px;
+    padding: 0 4px;
+    font-size: 0.7rem;
+  }
+
   .health-gauge__value {
     font-size: 0.7rem;
     min-width: 32px;
@@ -1454,7 +1455,36 @@ svg [data-selected="true"] {
     gap: 6px;
   }
 
-  .hud-audio-btn {
+  .hud-zoom-group {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding: 2px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--hud-border);
+  background: rgba(30, 41, 59, 0.75);
+}
+
+.hud-zoom-btn {
+  min-width: 26px;
+  height: 34px;
+  padding: 0 6px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.hud-zoom-btn:hover {
+  background: rgba(56, 189, 248, 0.16);
+}
+
+.hud-audio-btn {
     width: 30px;
     height: 30px;
   }

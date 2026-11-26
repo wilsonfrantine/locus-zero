@@ -1178,7 +1178,7 @@ export class LacView implements ILevel {
       </div>
 
       <div class="orientation-hint" role="status">
-        <span>Para melhor visualização, gire o celular na horizontal. Você também pode usar o zoom em pinça.</span>
+        <span>Para melhor visualização, gire o celular na horizontal. Use o zoom (+/−) no topo ou pinça e arraste o fundo para navegar.</span>
         <button type="button" class="orientation-hint__close" aria-label="Fechar dica">&times;</button>
       </div>
 
